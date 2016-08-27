@@ -7,6 +7,8 @@ import Char
 import Dict
 import List
 import Maybe
+import Cell
+
 
 main =
   App.program
@@ -16,14 +18,17 @@ main =
     , subscriptions = subscriptions
     }
 
+
 type alias Position = (Int, Int)
-type alias Board = Dict.Dict (Int, Int) String
+type alias Board = Dict.Dict Position Cell.Model
+
 
 type alias Model =
   { size : Int
   , board : Board
   , cursor : Position
   }
+
 
 init : (Model, Cmd Msg)
 init =
@@ -37,12 +42,15 @@ cartesian xs ys =
 
 board : Int -> Board
 board size =
-  Dict.fromList (List.map (\x -> (x, "a")) (cartesian [0..(size - 1)] [0..(size - 1)]))
+  Dict.fromList (List.map (\x -> (x, Cell.init)) (cartesian [0..(size - 1)] [0..(size - 1)]))
 
 
 type Msg
   = MoveCursor Int Int
   | Resize Int
+  | SetCell Char
+  | DeleteCell
+  | Nothing
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -58,23 +66,13 @@ update msg model =
     Resize size ->
       ({ model | size = size, board = board size, cursor = (0, 0) } , Cmd.none)
 
+    SetCell c ->
+      ({ model | board = (Dict.insert model.cursor (Cell.Value c) model.board) } , Cmd.none)
 
-letterBox : List (String, String)
-letterBox =
-    [ ("border", "1px solid black")
-    , ("text-align", "center")
-    , ("text-transform", "uppercase")
-    , ("height", "2rem")
-    , ("width", "2rem")
-    , ("font-family", "monospace")
-    , ("font-size", "1.5rem")
-    ]
+    DeleteCell ->
+      ({ model | board = (Dict.insert model.cursor Cell.Empty model.board) } , Cmd.none)
 
-
-yellow : List (String, String)
-yellow =
-  [ ("background-color", "yellow")
-  ]
+    _ -> (model, Cmd.none)
 
 
 view : Model -> Html Msg
@@ -96,8 +94,9 @@ viewBoard size board cursor =
 viewRow : Int -> Board -> Position -> Int -> Html Msg
 viewRow size board cursor row =
   let
-    cursorStyle col = if (row, col) == cursor then yellow else []
-    cell col = td [ style (letterBox ++ (cursorStyle col)) ] [ text (Maybe.withDefault "a" (Dict.get (row, col) board)) ]
+    cell col = case (Dict.get (row, col) board) of
+      Maybe.Just c -> App.map (always Nothing) (Cell.view c ((row, col) == cursor))
+      Maybe.Nothing -> td [] []
   in
     tr [] (List.map cell [0..(size - 1)])
 
@@ -109,7 +108,8 @@ keyCodeToChar keyCode =
     38 -> MoveCursor -1 0
     39 -> MoveCursor 0 1
     40 -> MoveCursor 1 0
-    _ -> MoveCursor 0 0
+    8 -> DeleteCell
+    _ -> keyCode |> Char.fromCode |> SetCell
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
