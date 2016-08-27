@@ -50,6 +50,7 @@ type Msg
   | Resize Int
   | SetCell Char
   | DeleteCell
+  | CellMsg Position Cell.Msg
   | Nothing
 
 
@@ -71,6 +72,9 @@ update msg model =
 
     DeleteCell ->
       ({ model | board = (Dict.insert model.cursor Cell.Empty model.board) } , Cmd.none)
+
+    CellMsg pos Cell.Click ->
+      ({ model | cursor = pos }, Cmd.none)
 
     _ -> (model, Cmd.none)
 
@@ -95,7 +99,7 @@ viewRow : Int -> Board -> Position -> Int -> Html Msg
 viewRow size board cursor row =
   let
     cell col = case (Dict.get (row, col) board) of
-      Maybe.Just c -> App.map (always Nothing) (Cell.view c ((row, col) == cursor))
+      Maybe.Just c -> App.map (CellMsg (row, col)) (Cell.view c ((row, col) == cursor))
       Maybe.Nothing -> td [] []
   in
     tr [] (List.map cell [0..(size - 1)])
@@ -110,6 +114,7 @@ keyCodeToChar keyCode =
     40 -> MoveCursor 1 0
     8 -> DeleteCell
     _ -> keyCode |> Char.fromCode |> SetCell
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
