@@ -2,9 +2,11 @@ import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (style)
 import Html.Events exposing (..)
-import List
 import Keyboard
 import Char
+import Dict
+import List
+import Maybe
 
 main =
   App.program
@@ -14,19 +16,28 @@ main =
     , subscriptions = subscriptions
     }
 
+type alias Position = (Int, Int)
+type alias Board = Dict.Dict (Int, Int) String
+
 type alias Model =
   { size : Int
-  , board : List (List String)
-  , cursor : (Int, Int)
+  , board : Board
+  , cursor : Position
   }
 
 init : (Model, Cmd Msg)
 init =
   ({ size = 5, board = (board 5), cursor = (0, 0) }, Cmd.none)
 
-board : Int -> List (List String)
+cartesian : List a -> List b -> List (a, b)
+cartesian xs ys =
+  List.concatMap
+    ( \x -> List.map ( \y -> (x, y) ) ys )
+    xs
+
+board : Int -> Board
 board size =
-  List.repeat size (List.repeat size "a")
+  Dict.fromList (List.map (\x -> (x, "a")) (cartesian [0..(size - 1)] [0..(size - 1)]))
 
 
 type Msg
@@ -60,8 +71,8 @@ letterBox =
     ]
 
 
-cursor : List (String, String)
-cursor =
+yellow : List (String, String)
+yellow =
   [ ("background-color", "yellow")
   ]
 
@@ -69,27 +80,26 @@ cursor =
 view : Model -> Html Msg
 view model =
   div []
-    [ text (toString model) 
-    , viewBoard model.cursor model.board
+    [ text (toString model)
+    , viewBoard model.size model.board model.cursor
     , button [ onClick (Resize 5) ] [ text "5" ]
     , button [ onClick (Resize 9) ] [ text "9" ]
     , button [ onClick (Resize 15) ] [ text "15" ]
     ]
 
-viewBoard : (Int, Int) -> List (List String) -> Html Msg
-viewBoard cursor board =
+viewBoard : Int -> Board -> Position -> Html Msg
+viewBoard size board cursor =
   table [ style [("border-collapse", "collapse")] ]
-    [ tbody [] (List.indexedMap (viewRow cursor) board) ]
+    [ tbody [] (List.map (viewRow size board cursor) [0..(size - 1)]) ]
 
 
-viewRow : (Int, Int) -> Int -> List String -> Html Msg
-viewRow (cursorRow, cursorCol) index row =
+viewRow : Int -> Board -> Position -> Int -> Html Msg
+viewRow size board cursor row =
   let
-    isCursorRow = index == cursorRow
-    cursorStyle col = if isCursorRow && col == cursorCol then cursor else []
-    cell col val = td [ style (letterBox ++ (cursorStyle col)) ] [ text val ]
+    cursorStyle col = if (row, col) == cursor then yellow else []
+    cell col = td [ style (letterBox ++ (cursorStyle col)) ] [ text (Maybe.withDefault "a" (Dict.get (row, col) board)) ]
   in
-    tr [] (List.indexedMap cell row)
+    tr [] (List.map cell [0..(size - 1)])
 
 
 keyCodeToChar : Keyboard.KeyCode -> Msg
