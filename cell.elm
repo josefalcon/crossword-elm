@@ -1,4 +1,4 @@
-module Cell exposing (Model(Value, Empty, Block), Msg(Click), init, update, view)
+module Cell exposing (Model(Value, Empty, Block), Msg(Click), update, view)
 
 import Html exposing (Html, td, text)
 import Html.Attributes exposing (style)
@@ -9,10 +9,6 @@ type Model
   = Value Char
   | Empty
   | Block
-
-
-init : Model
-init = Empty
 
 
 type Msg
@@ -57,5 +53,5 @@ view model selected =
   in
     case model of
       Empty -> td [ clicker, style (letterBox ++ maybeYellow) ] []
-      Block -> td [ clicker, style (backgroundColor "black") ] []
+      Block -> td [ clicker, style (letterBox ++ (backgroundColor "black") ++ maybeYellow) ] []
       Value c -> td [ clicker, style (letterBox ++ maybeYellow) ] [ text (String.fromChar c) ]
