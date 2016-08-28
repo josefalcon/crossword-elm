@@ -72,7 +72,7 @@ answer =
 
 puzzle : Decoder Model
 puzzle =
-  object2 (\a -> (\s -> { size = s, board = (board s), cursor = (0, 0), answers = a }))
+  object2 (\a -> (\s -> { size = s, board = (board s), cursor = (0, 0), answers = a, direction = Across }))
     ("answers" := (list answer))
     ("size" := dimensions)
 
@@ -84,6 +84,7 @@ type alias Model =
   , board : Board
   , answers : List Answer
   , cursor : Position
+  , direction : Direction
   }
 
 
@@ -129,6 +130,7 @@ type Msg
   | SetCell Char
   | DeleteCell
   | CellMsg Position Cell.Msg
+  | ChangeDirection
   | Nothing
 
 
@@ -146,15 +148,26 @@ update msg model =
     SetCell c ->
       case (Dict.get model.cursor model.board) of
         Just Cell.Block -> (model, Cmd.none)
-        _ -> ({ model | board = (Dict.insert model.cursor (Cell.Value c) model.board) } , Cmd.none)
+        _ ->
+          let
+            move = if (model.direction == Across) then MoveCursor 0 1 else MoveCursor 1 0
+          in
+            update move { model | board = (Dict.insert model.cursor (Cell.Value c) model.board) }
 
     DeleteCell ->
       case (Dict.get model.cursor model.board) of
         Just Cell.Block -> (model, Cmd.none)
-        _ -> ({ model | board = (Dict.insert model.cursor Cell.Empty model.board) } , Cmd.none)
+        _ ->
+          let
+            move = if (model.direction == Across) then MoveCursor 0 -1 else MoveCursor -1 0
+          in
+            update move { model | board = (Dict.insert model.cursor Cell.Empty model.board) }
 
     CellMsg pos Cell.Click ->
       ({ model | cursor = pos }, Cmd.none)
+
+    ChangeDirection ->
+      ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
 
     _ -> (model, Cmd.none)
 
@@ -170,7 +183,7 @@ view model =
     [ viewBoard model
     , viewClues model Across
     , viewClues model Down
-    -- , text (model |> activeAnswers |> toString)
+    -- , text (model.direction |> toString)
     ]
 
 viewBoard : Model -> Html Msg
@@ -220,6 +233,7 @@ viewClue clue active =
 keyCodeToChar : Keyboard.KeyCode -> Msg
 keyCodeToChar keyCode =
   case keyCode of
+    32 -> ChangeDirection
     37 -> MoveCursor 0 -1
     38 -> MoveCursor -1 0
     39 -> MoveCursor 0 1
