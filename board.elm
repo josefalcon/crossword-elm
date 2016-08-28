@@ -128,7 +128,6 @@ activeAnswers model =
 
 type Msg
   = MoveCursor Int Int
-  | Resize Dimensions
   | SetCell Char
   | DeleteCell
   | CellMsg Position Cell.Msg
@@ -145,9 +144,6 @@ update msg model =
         colBound = \v -> (max 0 (min (model.size.height - 1) v))
       in
         ({ model | cursor = (rowBound (row + rowDelta), colBound (col + colDelta)) }, Cmd.none)
-
-    Resize size ->
-      ({ model | size = size, board = board size, cursor = (0, 0) } , Cmd.none)
 
     SetCell c ->
       case (Dict.get model.cursor model.board) of
@@ -170,9 +166,6 @@ view model =
   div []
     [ text (toString model)
     , viewBoard model.size model.board model.cursor
-    , button [ onClick (Resize (Dimensions 5 5)) ] [ text "5" ]
-    , button [ onClick (Resize (Dimensions 9 9)) ] [ text "9" ]
-    , button [ onClick (Resize (Dimensions 15 15)) ] [ text "15" ]
     ]
 
 viewBoard : Dimensions -> Board -> Position -> Html Msg
