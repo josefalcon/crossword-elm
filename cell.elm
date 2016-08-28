@@ -17,16 +17,12 @@ type Msg
   | Click
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Clear ->
-      (Empty, Cmd.none)
-
-    Set cell ->
-      (cell, Cmd.none)
-
-    _ -> (model, Cmd.none)
+    Clear -> Empty
+    Set cell -> cell
+    _ -> model
 
 
 letterBox : List (String, String)

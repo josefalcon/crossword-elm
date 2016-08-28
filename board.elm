@@ -20,6 +20,7 @@ main =
     }
 
 
+type alias Dimensions = { width : Int, height : Int }
 type alias Position = (Int, Int)
 type alias Board = Dict.Dict Position Cell.Model
 type alias Answer =
@@ -31,7 +32,10 @@ type alias Answer =
 -- decoders
 example = """
 {
-  "size": [5, 5],
+  "size": {
+    "width": 5,
+    "height": 5
+  },
   "answers": [
     {
       "locations": [
@@ -51,10 +55,15 @@ example = """
 }
 """
 
+dimensions : Decoder Dimensions
+dimensions =
+  object2 Dimensions
+    ("width" := int)
+    ("height" := int)
+
 position : Decoder Position
 position =
   tuple2 (,) int int
-
 
 answer : Decoder Answer
 answer =
@@ -67,13 +76,13 @@ puzzle : Decoder Model
 puzzle =
   object2 (\a -> (\s -> { size = s, board = (board s), cursor = (0, 0), answers = a }))
     ("answers" := (list answer))
-    ("size" := (tuple2 (,) int int))
+    ("size" := dimensions)
 
 --
 
 
 type alias Model =
-  { size : (Int, Int)
+  { size : Dimensions
   , board : Board
   , answers : List Answer
   , cursor : Position
@@ -104,9 +113,9 @@ cartesian xs ys =
     xs
 
 
-board : (Int, Int) -> Board
+board : Dimensions -> Board
 board size =
-  Dict.fromList (List.map (\x -> (x, Cell.Block)) (cartesian [0..((fst size) - 1)] [0..((snd size) - 1)]))
+  Dict.fromList (List.map (\x -> (x, Cell.Block)) (cartesian [0..(size.height - 1)] [0..(size.width - 1)]))
 
 
 activeAnswers : Model -> List Answer
@@ -119,7 +128,7 @@ activeAnswers model =
 
 type Msg
   = MoveCursor Int Int
-  | Resize (Int, Int)
+  | Resize Dimensions
   | SetCell Char
   | DeleteCell
   | CellMsg Position Cell.Msg
@@ -132,8 +141,8 @@ update msg model =
     MoveCursor rowDelta colDelta ->
       let
         (row, col) = model.cursor
-        rowBound = \v -> (max 0 (min ((fst model.size) - 1) v))
-        colBound = \v -> (max 0 (min ((snd model.size) - 1) v))
+        rowBound = \v -> (max 0 (min (model.size.width - 1) v))
+        colBound = \v -> (max 0 (min (model.size.height - 1) v))
       in
         ({ model | cursor = (rowBound (row + rowDelta), colBound (col + colDelta)) }, Cmd.none)
 
@@ -141,10 +150,14 @@ update msg model =
       ({ model | size = size, board = board size, cursor = (0, 0) } , Cmd.none)
 
     SetCell c ->
-      ({ model | board = (Dict.insert model.cursor (Cell.Value c) model.board) } , Cmd.none)
+      case (Dict.get model.cursor model.board) of
+        Just Cell.Block -> (model, Cmd.none)
+        _ -> ({ model | board = (Dict.insert model.cursor (Cell.Value c) model.board) } , Cmd.none)
 
     DeleteCell ->
-      ({ model | board = (Dict.insert model.cursor Cell.Empty model.board) } , Cmd.none)
+      case (Dict.get model.cursor model.board) of
+        Just Cell.Block -> (model, Cmd.none)
+        _ -> ({ model | board = (Dict.insert model.cursor Cell.Empty model.board) } , Cmd.none)
 
     CellMsg pos Cell.Click ->
       ({ model | cursor = pos }, Cmd.none)
@@ -157,15 +170,15 @@ view model =
   div []
     [ text (toString model)
     , viewBoard model.size model.board model.cursor
-    , button [ onClick (Resize (5, 5)) ] [ text "5" ]
-    , button [ onClick (Resize (9, 9)) ] [ text "9" ]
-    , button [ onClick (Resize (15, 15)) ] [ text "15" ]
+    , button [ onClick (Resize (Dimensions 5 5)) ] [ text "5" ]
+    , button [ onClick (Resize (Dimensions 9 9)) ] [ text "9" ]
+    , button [ onClick (Resize (Dimensions 15 15)) ] [ text "15" ]
     ]
 
-viewBoard : (Int, Int) -> Board -> Position -> Html Msg
+viewBoard : Dimensions -> Board -> Position -> Html Msg
 viewBoard size board cursor =
   table [ style [("border-collapse", "collapse")] ]
-    [ tbody [] (List.map (viewRow (snd size) board cursor) [0..((fst size) - 1)]) ]
+    [ tbody [] (List.map (viewRow size.width board cursor) [0..(size.height - 1)]) ]
 
 
 viewRow : Int -> Board -> Position -> Int -> Html Msg
