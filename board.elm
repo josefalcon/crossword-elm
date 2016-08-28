@@ -35,94 +35,7 @@ type alias Answer =
 
 -- decoders
 example = """
-{
-  "size": {
-    "width": 5,
-    "height": 5
-  },
-  "answers": [
-    {
-      "locations": [
-        [0, 0], [0, 1], [0, 2]
-      ],
-      "clue": "something horizontal",
-      "answer": "foo",
-      "direction": "across"
-    },
-    {
-      "locations": [
-        [1, 0], [1, 1], [1, 2], [1, 3]
-      ],
-      "clue": "something horizontal",
-      "answer": "foo",
-      "direction": "across"
-    },
-    {
-      "locations": [
-        [2, 0], [2, 1], [2, 2], [2, 3], [2, 4]
-      ],
-      "clue": "something horizontal",
-      "answer": "foo",
-      "direction": "across"
-    },
-    {
-      "locations": [
-        [3, 1], [3, 2], [3, 3], [3, 4]
-      ],
-      "clue": "something horizontal",
-      "answer": "foo",
-      "direction": "across"
-    },
-    {
-      "locations": [
-        [4, 2], [4, 3], [4, 4]
-      ],
-      "clue": "something horizontal",
-      "answer": "foo",
-      "direction": "across"
-    },
-    {
-      "locations": [
-        [0, 0], [1, 0], [2, 0]
-      ],
-      "clue": "something vertical",
-      "answer": "bar",
-      "direction": "down"
-    },
-    {
-      "locations": [
-        [0, 1], [1, 1], [2, 1], [3, 1]
-      ],
-      "clue": "something vertical",
-      "answer": "bar",
-      "direction": "down"
-    },
-    {
-      "locations": [
-        [0, 2], [1, 2], [2, 2], [3, 2], [4, 2]
-      ],
-      "clue": "something vertical",
-      "answer": "bar",
-      "direction": "down"
-    },
-    {
-      "locations": [
-        [1, 3], [2, 3], [3, 3], [4, 3]
-      ],
-      "clue": "something vertical",
-      "answer": "bar",
-      "direction": "down"
-    },
-    {
-      "locations": [
-        [2, 4], [3, 4], [4, 4]
-      ],
-      "clue": "something vertical",
-      "answer": "bar",
-      "direction": "down"
-    }
-  ]
-}
+{"size":{"width":9,"height":9},"answers":[{"locations":[[0,0],[0,1],[0,2],[0,3]],"clue":"Vegetarian option","answer":"tofu","direction":"across"},{"locations":[[0,5],[0,6],[0,7],[0,8]],"clue":"Item on a desktop","answer":"icon","direction":"across"},{"locations":[[1,0],[1,1],[1,2],[1,3]],"clue":"Instrument on Guinness logo","answer":"harp","direction":"across"},{"locations":[[1,5],[1,6],[1,7],[1,8]],"clue":"Nickname for Jose","answer":"pepe","direction":"across"},{"locations":[[2,0],[2,1],[2,2],[2,3]],"clue":"'Ahh, makes sense'","answer":"isee","direction":"across"},{"locations":[[2,5],[2,6],[2,7],[2,8]],"clue":"Et __ (and others)","answer":"alia","direction":"across"},{"locations":[[3,0],[3,1],[3,2],[3,3],[3,4]],"clue":"Two column notebook","answer":"steno","direction":"across"},{"locations":[[3,6],[3,7],[3,8]],"clue":"Suffix for auction and mountain","answer":"eer","direction":"across"},{"locations":[[4,2],[4,3],[4,4],[4,5],[4,6]],"clue":"Extemporize","answer":"adlib","direction":"across"},{"locations":[[5,0],[5,1],[5,2]],"clue":"Swing side to side","answer":"wag","direction":"across"},{"locations":[[5,4],[5,5],[5,6],[5,7],[5,8]],"clue":"Energy scandal from 2001","answer":"enron","direction":"across"},{"locations":[[6,0],[6,1],[6,2],[6,3]],"clue":"Scores perfectly","answer":"aces","direction":"across"},{"locations":[[6,5],[6,6],[6,7],[6,8]],"clue":"Famous lamp of the 1960's","answer":"lava","direction":"across"},{"locations":[[7,0],[7,1],[7,2],[7,3]],"clue":"Row on a chessboard","answer":"rank","direction":"across"},{"locations":[[7,5],[7,6],[7,7],[7,8]],"clue":"'Up and ___'","answer":"atem","direction":"across"},{"locations":[[8,0],[8,1],[8,2],[8,3]],"clue":"Regret or disappointment","answer":"pity","direction":"across"},{"locations":[[8,5],[8,6],[8,7],[8,8]],"clue":"Used to be","answer":"were","direction":"across"},{"locations":[[0,0],[1,0],[2,0],[3,0]],"clue":"Not that","answer":"this","direction":"down"},{"locations":[[5,0],[6,0],[7,0],[8,0]],"clue":"Drive for faster than light travel","answer":"warp","direction":"down"},{"locations":[[0,1],[1,1],[2,1],[3,1]],"clue":"Where hops are dried","answer":"oast","direction":"down"},{"locations":[[5,1],[6,1],[7,1],[8,1]],"clue":"Antioxidant rich superfood","answer":"acai","direction":"down"},{"locations":[[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2]],"clue":"Professional athlete lacking a contract","answer":"freeagent","direction":"down"},{"locations":[[0,3],[1,3],[2,3],[3,3],[4,3]],"clue":"Turn over","answer":"upend","direction":"down"},{"locations":[[6,3],[7,3],[8,3]],"clue":"Lucy's locale","answer":"sky","direction":"down"},{"locations":[[3,4],[4,4],[5,4]],"clue":"Grand ___ Opry","answer":"ole","direction":"down"},{"locations":[[0,5],[1,5],[2,5]],"clue":"Bar order, briefly","answer":"ipa","direction":"down"},{"locations":[[4,5],[5,5],[6,5],[7,5],[8,5]],"clue":"Marital kinship","answer":"inlaw","direction":"down"},{"locations":[[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6]],"clue":"Kool & the Gang album from 1980","answer":"celebrate","direction":"down"},{"locations":[[0,7],[1,7],[2,7],[3,7]],"clue":"Ron Howard in The Andy Griffith Show","answer":"opie","direction":"down"},{"locations":[[5,7],[6,7],[7,7],[8,7]],"clue":"End of message on the radio","answer":"over","direction":"down"},{"locations":[[0,8],[1,8],[2,8],[3,8]],"clue":"Close","answer":"near","direction":"down"},{"locations":[[5,8],[6,8],[7,8],[8,8]],"clue":"Appoint (someone)","answer":"name","direction":"down"}]}
 """
 directionSpecific : String -> Decoder Direction
 directionSpecific s =
@@ -247,11 +160,9 @@ view : Model -> Html Msg
 view model =
   div [ style [ ("padding", "1rem") ] ]
     [ viewBoard model.size model.board model.cursor
-    , h2 [] [ text "Across" ]
     , viewClues model Across
-    , h2 [] [ text "Down" ]
     , viewClues model Down
-    , text (model |> activeAnswers |> toString)
+    -- , text (model |> activeAnswers |> toString)
     ]
 
 viewBoard : Dimensions -> Board -> Position -> Html Msg
@@ -277,8 +188,9 @@ viewClues model direction =
     isActiveClue c = List.any ((==) c) activeClues
     clues = model.answers |> List.filter (\s -> s.direction == direction)
   in
-    div []
-      [ ul [] (List.map (\c -> li [ style (if (isActiveClue c) then [("background-color", "red")] else []) ] [ text c.clue ]) clues)
+    div [ style [("float", "left"), ("overflow", "hidden")] ]
+      [ h2 [] [ text (toString direction) ]
+      , ul [] (List.map (\c -> li [ style (if (isActiveClue c) then [("background-color", "red")] else []) ] [ text c.clue ]) clues)
       ]
 
 
