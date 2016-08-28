@@ -202,7 +202,9 @@ keyCodeToChar keyCode =
     39 -> MoveCursor 0 1
     40 -> MoveCursor 1 0
     8 -> DeleteCell
-    _ -> keyCode |> Char.fromCode |> SetCell
+    _ -> if (keyCode >= 65 && keyCode <= 90)
+         then keyCode |> Char.fromCode |> SetCell
+         else Nothing
 
 
 subscriptions : Model -> Sub Msg
