@@ -46,7 +46,7 @@ model =
       { size = size
       , grid = (blockGrid size)
       , cursor = (0, 0)
-      , answers = answers
+      , answers = answers |> List.sortBy .number
       , direction = Across
       , cellNumbers = cellNumbers answers
       }
