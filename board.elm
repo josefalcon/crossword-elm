@@ -58,8 +58,8 @@ setCursorCell cell model =
 
 type Msg
   = MoveCursor Int Int
-  | SetCell Char
-  | DeleteCell
+  | SetCursor Position
+  | SetCell Cell
   | ChangeDirection
   | NoOp
 
@@ -67,31 +67,23 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    SetCursor (toRow, toCol) ->
+      let (row, col) = model.cursor in
+        update (MoveCursor (toRow - row) (toCol - col)) model
+
     MoveCursor rowDelta colDelta ->
       let
         (row, col) = model.cursor
-        rowBound v = (max 0 (min (model.size.width - 1) v))
-        colBound v = (max 0 (min (model.size.height - 1) v))
+        { width, height } = model.size
+        nextRow = row + rowDelta |> min (width - 1) |> max 0
+        nextCol = col + colDelta |> min (height - 1) |> max 0
       in
-        ({ model | cursor = (rowBound (row + rowDelta), colBound (col + colDelta)) }, Cmd.none)
+        ({ model | cursor = (nextRow, nextCol) }, Cmd.none)
 
     SetCell c ->
       case (getCursorCell model) of
         Block -> (model, Cmd.none)
-        _ ->
-          let
-            move = if (model.direction == Across) then MoveCursor 0 1 else MoveCursor 1 0
-          in
-            update move { model | grid = (setCursorCell (Value c) model) }
-
-    DeleteCell ->
-      case (getCursorCell model) of
-        Block -> (model, Cmd.none)
-        _ ->
-          let
-            move = if (model.direction == Across) then MoveCursor 0 -1 else MoveCursor -1 0
-          in
-            update move { model | grid = (setCursorCell Empty model) }
+        _ -> ({ model | grid = setCursorCell c model }, Cmd.none)
 
     ChangeDirection ->
       ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
@@ -99,88 +91,121 @@ update msg model =
     _ -> (model, Cmd.none)
 
 
-clueNumbers : Model -> Dict.Dict Position Int
-clueNumbers model =
-  (List.map (\a -> (a.locations |> List.head |> Maybe.withDefault (0, 0), a.number)) model.answers) |> Dict.fromList
-
-
-activeAnswers : Model -> List Answer
-activeAnswers model =
-  let
-    f = \a -> (List.any (\x -> model.cursor == x) a.locations)
-  in
-    List.filter f model.answers
+-- view
 
 
 view : Model -> Html Msg
 view model =
   div [ style [ ("padding", "1rem") ] ]
-    [ viewBoard model
+    [ viewGrid model
     , viewClues model Across
     , viewClues model Down
-    -- , text (model.direction |> toString)
     ]
 
-viewBoard : Model -> Html Msg
-viewBoard model =
-  table [ style [("border-collapse", "collapse")] ]
+
+viewGrid : Model -> Html Msg
+viewGrid model =
+  table [ style [ ("border-collapse", "collapse") ] ]
     [ tbody [] (List.map (viewRow model) [0..(model.size.height - 1)]) ]
 
 
 viewRow : Model -> Int -> Html Msg
 viewRow model row =
   let
-    -- activeClues = activeAnswers model
-    -- number = if (List.any (\a -> a.locations |> head |> ((==) (row, col))) activeAnswers)
-    --          then Just
-    number col = (Dict.get (row, col) (clueNumbers model))
+    number col = (Dict.get (row, col) model.cellNumbers)
     cell col = case (getCell (row, col) model.grid) of
-      Maybe.Just c -> viewCell c ((row, col) == model.cursor) (number col)
-      Maybe.Nothing -> td [] []
+      Just c -> viewCell c (row, col) ((row, col) == model.cursor) (number col)
+      Nothing -> td [] []
   in
     tr [] (List.map cell [0..(model.size.width - 1)])
+
+
+viewCell : Cell -> Position -> Bool -> Maybe Int -> Html Msg
+viewCell model position selected number =
+  let
+    maybeYellow = if selected then (backgroundColor "yellow") else []
+    clicker = onClick (SetCursor position)
+    clueNumber = case number of
+      Just n -> span [ style numberStyle ] [ n |> toString |> text ]
+      Nothing -> span [] []
+  in
+    case model of
+      Empty ->
+        td [ clicker, style (cellStyle ++ maybeYellow) ] [ clueNumber ]
+
+      Block ->
+        td [ clicker, style (cellStyle ++ (backgroundColor "black") ++ maybeYellow) ] []
+
+      Value c ->
+        td [ clicker, style (cellStyle ++ maybeYellow) ] [ clueNumber, text (String.fromChar c) ]
 
 
 viewClues : Model -> Direction -> Html Msg
 viewClues model direction =
   let
-    activeClues = activeAnswers model
-    isActiveClue c = List.any ((==) c) activeClues
+    activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
+    isActiveClue clue = List.any ((==) clue) activeClues
     clues = model.answers |> List.filter (\s -> s.direction == direction) |> List.sortBy .number
   in
-    div [ style [("float", "left"), ("overflow", "hidden")] ]
+    div [ style clueListStyle ]
       [ h2 [] [ text (toString direction) ]
       , ul [ style [("padding", "0")] ] (List.map (\c -> viewClue c (isActiveClue c)) clues)
       ]
 
 
+viewClue : Answer -> Bool -> Html Msg
 viewClue clue active =
   let
-    listStyle = [ ("list-style", "none") ]
-    highlight = if active then [("background-color", "red")] else []
+    highlight = if active then (backgroundColor "red") else []
   in
-    li [ style (highlight ++ listStyle) ]
+    li [ style (clueStyle ++ highlight) ]
       [ text ((toString clue.number) ++ " ")
       , text clue.clue
       ]
 
-letterBox : List (String, String)
-letterBox =
-    [ ("border", "1px solid black")
-    , ("text-align", "center")
-    , ("text-transform", "uppercase")
-    , ("height", "2rem")
-    , ("min-height", "2rem")
-    , ("width", "2rem")
-    , ("min-width", "2rem")
-    , ("font-family", "monospace")
-    , ("font-size", "1.5rem")
-    , ("position", "relative")
-    ]
+
+-- subscriptions
+
+
+keyCodeToChar : Keyboard.KeyCode -> Msg
+keyCodeToChar keyCode =
+  case keyCode of
+    32 -> ChangeDirection
+    37 -> MoveCursor 0 -1
+    38 -> MoveCursor -1 0
+    39 -> MoveCursor 0 1
+    40 -> MoveCursor 1 0
+    8 -> SetCell Empty
+    _ -> if (keyCode >= 65 && keyCode <= 90)
+         then keyCode |> Char.fromCode |> Value |> SetCell
+         else NoOp
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Keyboard.downs keyCodeToChar
+
+
+-- css
 
 
 backgroundColor : String -> List (String, String)
 backgroundColor color = [ ("background-color", color) ]
+
+
+cellStyle : List (String, String)
+cellStyle =
+  [ ("border", "1px solid black")
+  , ("text-align", "center")
+  , ("text-transform", "uppercase")
+  , ("height", "2rem")
+  , ("min-height", "2rem")
+  , ("width", "2rem")
+  , ("min-width", "2rem")
+  , ("font-family", "monospace")
+  , ("font-size", "1.5rem")
+  , ("position", "relative")
+  ]
 
 
 numberStyle : List (String, String)
@@ -193,35 +218,14 @@ numberStyle =
   ]
 
 
-viewCell : Cell -> Bool -> Maybe Int -> Html Msg
-viewCell model selected number =
-  let
-    maybeYellow = if selected then (backgroundColor "yellow") else []
-    -- clicker = onClick Click
-    clueNumber = case number of
-      Maybe.Just n -> span [ style numberStyle ] [ n |> toString |> text ]
-      Maybe.Nothing -> span [] []
-  in
-    case model of
-      Empty -> td [ style (letterBox ++ maybeYellow) ] [ clueNumber ]
-      Block -> td [ style (letterBox ++ (backgroundColor "black") ++ maybeYellow) ] [ ]
-      Value c -> td [ style (letterBox ++ maybeYellow) ] [ clueNumber, text (String.fromChar c) ]
+clueListStyle : List (String, String)
+clueListStyle =
+  [ ("float", "left")
+  , ("overflow", "hidden")
+  ]
 
 
-keyCodeToChar : Keyboard.KeyCode -> Msg
-keyCodeToChar keyCode =
-  case keyCode of
-    32 -> ChangeDirection
-    37 -> MoveCursor 0 -1
-    38 -> MoveCursor -1 0
-    39 -> MoveCursor 0 1
-    40 -> MoveCursor 1 0
-    8 -> DeleteCell
-    _ -> if (keyCode >= 65 && keyCode <= 90)
-         then keyCode |> Char.fromCode |> SetCell
-         else NoOp
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-  Keyboard.downs keyCodeToChar
+clueStyle : List (String, String)
+clueStyle =
+  [ ("list-style", "none")
+  ]

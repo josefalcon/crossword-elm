@@ -3,6 +3,7 @@ module Model exposing (..)
 import Array exposing (Array)
 import List
 import Maybe exposing (andThen)
+import Dict exposing (Dict)
 
 type alias Model =
   { size : Dimensions
@@ -10,6 +11,7 @@ type alias Model =
   , answers : List Answer
   , cursor : Position
   , direction : Direction
+  , cellNumbers : Dict Position Int
   }
 
 

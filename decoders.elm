@@ -3,6 +3,7 @@ module Decoders exposing (..)
 import Model exposing (..)
 import Json.Decode exposing (..)
 import Array
+import Dict exposing (Dict)
 
 
 direction : Decoder Direction
@@ -47,8 +48,17 @@ model =
       , cursor = (0, 0)
       , answers = answers
       , direction = Across
+      , cellNumbers = cellNumbers answers
       }
   in
     object2 initialModel
       ("answers" := (list answer))
       ("size" := dimensions)
+
+
+cellNumbers : List Answer -> Dict Position Int
+cellNumbers answers =
+  let
+    position answer = answer.locations |> List.head |> Maybe.withDefault (-1, -1)
+  in
+    List.map (\a -> (position a, a.number)) answers |> Dict.fromList
