@@ -124,7 +124,7 @@ view model =
   let
     activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
   in
-    div [ style [ ("padding", "1rem") ] ]
+    div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
       [ viewGrid model activeClues
       , viewClues model Across activeClues
       , viewClues model Down activeClues
@@ -136,8 +136,10 @@ viewGrid model activeClues =
   let
     activeCells = (List.concatMap .locations (List.filter (\a -> a.direction == model.direction) activeClues))
   in
-    table [ style [ ("border-collapse", "collapse") ] ]
-      [ tbody [] (List.map (viewRow model activeCells) [0..(model.size.height - 1)]) ]
+    div [ style [ ("flex-basis", "100%") ] ]
+      [ table [ style [ ("border-collapse", "collapse") ] ]
+        [ tbody [] (List.map (viewRow model activeCells) [0..(model.size.height - 1)]) ]
+      ]
 
 
 viewRow : Model -> List Position -> Int -> Html Msg
@@ -185,7 +187,7 @@ viewClues model direction activeClues =
     clues = model.answers |> List.filter (\s -> s.direction == direction) |> List.sortBy .number
   in
     div [ style clueListStyle ]
-      [ h2 [] [ text (toString direction) ]
+      [ h2 [ style h2Style ] [ text (toString direction) ]
       , ul [ style [("padding", "0")] ] (List.map (\c -> viewClue c (isActiveClue c)) clues)
       ]
 
@@ -196,7 +198,7 @@ viewClue clue active =
     highlight = if active then (backgroundColor blue) else []
   in
     li [ style (clueStyle ++ highlight) ]
-      [ text ((toString clue.number) ++ " ")
+      [ text ((toString clue.number) ++ ". ")
       , text clue.clue
       ]
 
@@ -238,6 +240,12 @@ backgroundColor : String -> List (String, String)
 backgroundColor color = [ ("background-color", color) ]
 
 
+h2Style : List (String, String)
+h2Style =
+  [ ("margin-top", "0")
+  ]
+
+
 cellStyle : List (String, String)
 cellStyle =
   [ ("border", "1px solid black")
@@ -267,6 +275,7 @@ clueListStyle : List (String, String)
 clueListStyle =
   [ ("float", "left")
   , ("overflow", "hidden")
+  , ("flex-basis", "100%")
   ]
 
 
