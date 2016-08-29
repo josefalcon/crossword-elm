@@ -64,6 +64,22 @@ type Msg
   | NoOp
 
 
+left : Msg
+left = MoveCursor 0 -1
+
+
+right : Msg
+right = MoveCursor 0 1
+
+
+up : Msg
+up = MoveCursor -1 0
+
+
+down : Msg
+down = MoveCursor 1 0
+
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -83,7 +99,16 @@ update msg model =
     SetCell c ->
       case (getCursorCell model) of
         Block -> (model, Cmd.none)
-        _ -> ({ model | grid = setCursorCell c model }, Cmd.none)
+        _ ->
+          let
+            nextModel = { model | grid = setCursorCell c model }
+            nextCursor = case (c, model.direction) of
+              (Empty, Across) -> left
+              (Empty, Down) -> up
+              (_, Across) -> right
+              _ -> down
+          in
+            update nextCursor nextModel
 
     ChangeDirection ->
       ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
@@ -171,10 +196,10 @@ keyCodeToChar : Keyboard.KeyCode -> Msg
 keyCodeToChar keyCode =
   case keyCode of
     32 -> ChangeDirection
-    37 -> MoveCursor 0 -1
-    38 -> MoveCursor -1 0
-    39 -> MoveCursor 0 1
-    40 -> MoveCursor 1 0
+    37 -> left
+    38 -> up
+    39 -> right
+    40 -> down
     8 -> SetCell Empty
     _ -> if (keyCode >= 65 && keyCode <= 90)
          then keyCode |> Char.fromCode |> Value |> SetCell
