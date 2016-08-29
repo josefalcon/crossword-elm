@@ -8798,7 +8798,8 @@ var _user$project$Main$clueStyle = _elm_lang$core$Native_List.fromArray(
 var _user$project$Main$clueListStyle = _elm_lang$core$Native_List.fromArray(
 	[
 		{ctor: '_Tuple2', _0: 'float', _1: 'left'},
-		{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'}
+		{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'},
+		{ctor: '_Tuple2', _0: 'flex-basis', _1: '100%'}
 	]);
 var _user$project$Main$numberStyle = _elm_lang$core$Native_List.fromArray(
 	[
@@ -8820,6 +8821,10 @@ var _user$project$Main$cellStyle = _elm_lang$core$Native_List.fromArray(
 		{ctor: '_Tuple2', _0: 'font-family', _1: 'monospace'},
 		{ctor: '_Tuple2', _0: 'font-size', _1: '1.5rem'},
 		{ctor: '_Tuple2', _0: 'position', _1: 'relative'}
+	]);
+var _user$project$Main$h2Style = _elm_lang$core$Native_List.fromArray(
+	[
+		{ctor: '_Tuple2', _0: 'margin-top', _1: '0'}
 	]);
 var _user$project$Main$backgroundColor = function (color) {
 	return _elm_lang$core$Native_List.fromArray(
@@ -8846,7 +8851,7 @@ var _user$project$Main$viewClue = F2(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						_elm_lang$core$Basics$toString(clue.number),
-						' ')),
+						'. ')),
 					_elm_lang$html$Html$text(clue.clue)
 				]));
 	});
@@ -8883,7 +8888,9 @@ var _user$project$Main$viewClues = F3(
 					A2(
 					_elm_lang$html$Html$h2,
 					_elm_lang$core$Native_List.fromArray(
-						[]),
+						[
+							_elm_lang$html$Html_Attributes$style(_user$project$Main$h2Style)
+						]),
 					_elm_lang$core$Native_List.fromArray(
 						[
 							_elm_lang$html$Html$text(
@@ -9109,25 +9116,38 @@ var _user$project$Main$viewGrid = F2(
 				},
 				activeClues));
 		return A2(
-			_elm_lang$html$Html$table,
+			_elm_lang$html$Html$div,
 			_elm_lang$core$Native_List.fromArray(
 				[
 					_elm_lang$html$Html_Attributes$style(
 					_elm_lang$core$Native_List.fromArray(
 						[
-							{ctor: '_Tuple2', _0: 'border-collapse', _1: 'collapse'}
+							{ctor: '_Tuple2', _0: 'flex-basis', _1: '100%'}
 						]))
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
 					A2(
-					_elm_lang$html$Html$tbody,
+					_elm_lang$html$Html$table,
 					_elm_lang$core$Native_List.fromArray(
-						[]),
-					A2(
-						_elm_lang$core$List$map,
-						A2(_user$project$Main$viewRow, model, activeCells),
-						_elm_lang$core$Native_List.range(0, model.size.height - 1)))
+						[
+							_elm_lang$html$Html_Attributes$style(
+							_elm_lang$core$Native_List.fromArray(
+								[
+									{ctor: '_Tuple2', _0: 'border-collapse', _1: 'collapse'}
+								]))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							A2(
+							_elm_lang$html$Html$tbody,
+							_elm_lang$core$Native_List.fromArray(
+								[]),
+							A2(
+								_elm_lang$core$List$map,
+								A2(_user$project$Main$viewRow, model, activeCells),
+								_elm_lang$core$Native_List.range(0, model.size.height - 1)))
+						]))
 				]));
 	});
 var _user$project$Main$view = function (model) {
@@ -9150,7 +9170,8 @@ var _user$project$Main$view = function (model) {
 				_elm_lang$html$Html_Attributes$style(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple2', _0: 'padding', _1: '1rem'}
+						{ctor: '_Tuple2', _0: 'padding', _1: '1rem'},
+						{ctor: '_Tuple2', _0: 'display', _1: 'flex'}
 					]))
 			]),
 		_elm_lang$core$Native_List.fromArray(
