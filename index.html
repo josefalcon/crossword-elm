@@ -8777,7 +8777,12 @@ var _user$project$Decoders$model = function () {
 				size: size,
 				grid: blockGrid(size),
 				cursor: {ctor: '_Tuple2', _0: 0, _1: 0},
-				answers: answers,
+				answers: A2(
+					_elm_lang$core$List$sortBy,
+					function (_) {
+						return _.number;
+					},
+					answers),
 				direction: _user$project$Model$Across,
 				cellNumbers: _user$project$Decoders$cellNumbers(answers)
 			};
@@ -8858,16 +8863,11 @@ var _user$project$Main$viewClue = F2(
 var _user$project$Main$viewClues = F3(
 	function (model, direction, activeClues) {
 		var clues = A2(
-			_elm_lang$core$List$sortBy,
-			function (_) {
-				return _.number;
+			_elm_lang$core$List$filter,
+			function (s) {
+				return _elm_lang$core$Native_Utils.eq(s.direction, direction);
 			},
-			A2(
-				_elm_lang$core$List$filter,
-				function (s) {
-					return _elm_lang$core$Native_Utils.eq(s.direction, direction);
-				},
-				model.answers));
+			model.answers);
 		var isActiveClue = function (clue) {
 			return A2(
 				_elm_lang$core$List$any,
@@ -8917,14 +8917,35 @@ var _user$project$Main$viewClues = F3(
 						clues))
 				]));
 	});
+var _user$project$Main$dropWhile = F2(
+	function (pred, list) {
+		dropWhile:
+		while (true) {
+			var _p0 = list;
+			if (_p0.ctor === '::') {
+				if (pred(_p0._0)) {
+					var _v1 = pred,
+						_v2 = _p0._1;
+					pred = _v1;
+					list = _v2;
+					continue dropWhile;
+				} else {
+					return list;
+				}
+			} else {
+				return _elm_lang$core$Native_List.fromArray(
+					[]);
+			}
+		}
+	});
 var _user$project$Main$setCursorCell = F2(
 	function (cell, model) {
 		return A3(_user$project$Model$setCell, model.cursor, cell, model.grid);
 	});
 var _user$project$Main$getCursorCell = function (model) {
-	var _p0 = A2(_user$project$Model$getCell, model.cursor, model.grid);
-	if (_p0.ctor === 'Just') {
-		return _p0._0;
+	var _p1 = A2(_user$project$Model$getCell, model.cursor, model.grid);
+	if (_p1.ctor === 'Just') {
+		return _p1._0;
 	} else {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
@@ -8932,22 +8953,22 @@ var _user$project$Main$getCursorCell = function (model) {
 				start: {line: 46, column: 3},
 				end: {line: 48, column: 43}
 			},
-			_p0)('Invalid state');
+			_p1)('Invalid state');
 	}
 };
 var _user$project$Main$example = '\n{\"size\":{\"width\":9,\"height\":9},\"answers\":[{\"locations\":[[0,0],[0,1],[0,2],[0,3]],\"clue\":\"Vegetarian option\",\"answer\":\"tofu\",\"direction\":\"across\",\"number\":1},{\"locations\":[[0,0],[1,0],[2,0],[3,0]],\"clue\":\"Not that\",\"answer\":\"this\",\"direction\":\"down\",\"number\":1},{\"locations\":[[0,1],[1,1],[2,1],[3,1]],\"clue\":\"Where hops are dried\",\"answer\":\"oast\",\"direction\":\"down\",\"number\":2},{\"locations\":[[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2]],\"clue\":\"Professional athlete lacking a contract\",\"answer\":\"freeagent\",\"direction\":\"down\",\"number\":3},{\"locations\":[[0,3],[1,3],[2,3],[3,3],[4,3]],\"clue\":\"Turn over\",\"answer\":\"upend\",\"direction\":\"down\",\"number\":4},{\"locations\":[[0,5],[0,6],[0,7],[0,8]],\"clue\":\"Item on a desktop\",\"answer\":\"icon\",\"direction\":\"across\",\"number\":5},{\"locations\":[[0,5],[1,5],[2,5]],\"clue\":\"Bar order, briefly\",\"answer\":\"ipa\",\"direction\":\"down\",\"number\":5},{\"locations\":[[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6]],\"clue\":\"Kool & the Gang album from 1980\",\"answer\":\"celebrate\",\"direction\":\"down\",\"number\":6},{\"locations\":[[0,7],[1,7],[2,7],[3,7]],\"clue\":\"Ron Howard in The Andy Griffith Show\",\"answer\":\"opie\",\"direction\":\"down\",\"number\":7},{\"locations\":[[0,8],[1,8],[2,8],[3,8]],\"clue\":\"Close\",\"answer\":\"near\",\"direction\":\"down\",\"number\":8},{\"locations\":[[1,0],[1,1],[1,2],[1,3]],\"clue\":\"Instrument on Guinness logo\",\"answer\":\"harp\",\"direction\":\"across\",\"number\":9},{\"locations\":[[1,5],[1,6],[1,7],[1,8]],\"clue\":\"Nickname for Jose\",\"answer\":\"pepe\",\"direction\":\"across\",\"number\":10},{\"locations\":[[2,0],[2,1],[2,2],[2,3]],\"clue\":\"\'Ahh, makes sense\'\",\"answer\":\"isee\",\"direction\":\"across\",\"number\":11},{\"locations\":[[2,5],[2,6],[2,7],[2,8]],\"clue\":\"Et __ (and others)\",\"answer\":\"alia\",\"direction\":\"across\",\"number\":12},{\"locations\":[[3,0],[3,1],[3,2],[3,3],[3,4]],\"clue\":\"Two column notebook\",\"answer\":\"steno\",\"direction\":\"across\",\"number\":13},{\"locations\":[[3,4],[4,4],[5,4]],\"clue\":\"Grand ___ Opry\",\"answer\":\"ole\",\"direction\":\"down\",\"number\":14},{\"locations\":[[3,6],[3,7],[3,8]],\"clue\":\"Suffix for auction and mountain\",\"answer\":\"eer\",\"direction\":\"across\",\"number\":15},{\"locations\":[[4,2],[4,3],[4,4],[4,5],[4,6]],\"clue\":\"Extemporize\",\"answer\":\"adlib\",\"direction\":\"across\",\"number\":16},{\"locations\":[[4,5],[5,5],[6,5],[7,5],[8,5]],\"clue\":\"Marital kinship\",\"answer\":\"inlaw\",\"direction\":\"down\",\"number\":17},{\"locations\":[[5,0],[5,1],[5,2]],\"clue\":\"Swing side to side\",\"answer\":\"wag\",\"direction\":\"across\",\"number\":18},{\"locations\":[[5,0],[6,0],[7,0],[8,0]],\"clue\":\"Drive for faster than light travel\",\"answer\":\"warp\",\"direction\":\"down\",\"number\":18},{\"locations\":[[5,1],[6,1],[7,1],[8,1]],\"clue\":\"Antioxidant rich superfood\",\"answer\":\"acai\",\"direction\":\"down\",\"number\":19},{\"locations\":[[5,4],[5,5],[5,6],[5,7],[5,8]],\"clue\":\"Energy scandal from 2001\",\"answer\":\"enron\",\"direction\":\"across\",\"number\":20},{\"locations\":[[5,7],[6,7],[7,7],[8,7]],\"clue\":\"End of message on the radio\",\"answer\":\"over\",\"direction\":\"down\",\"number\":21},{\"locations\":[[5,8],[6,8],[7,8],[8,8]],\"clue\":\"Appoint (someone)\",\"answer\":\"name\",\"direction\":\"down\",\"number\":22},{\"locations\":[[6,0],[6,1],[6,2],[6,3]],\"clue\":\"Scores perfectly\",\"answer\":\"aces\",\"direction\":\"across\",\"number\":23},{\"locations\":[[6,3],[7,3],[8,3]],\"clue\":\"Lucy\'s locale\",\"answer\":\"sky\",\"direction\":\"down\",\"number\":24},{\"locations\":[[6,5],[6,6],[6,7],[6,8]],\"clue\":\"Famous lamp of the 1960\'s\",\"answer\":\"lava\",\"direction\":\"across\",\"number\":25},{\"locations\":[[7,0],[7,1],[7,2],[7,3]],\"clue\":\"Row on a chessboard\",\"answer\":\"rank\",\"direction\":\"across\",\"number\":26},{\"locations\":[[7,5],[7,6],[7,7],[7,8]],\"clue\":\"\'Up and ___\'\",\"answer\":\"atem\",\"direction\":\"across\",\"number\":27},{\"locations\":[[8,0],[8,1],[8,2],[8,3]],\"clue\":\"Regret or disappointment\",\"answer\":\"pity\",\"direction\":\"across\",\"number\":28},{\"locations\":[[8,5],[8,6],[8,7],[8,8]],\"clue\":\"Used to be\",\"answer\":\"were\",\"direction\":\"across\",\"number\":29}]}\n';
 var _user$project$Main$init = function () {
-	var _p2 = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Decoders$model, _user$project$Main$example);
-	if (_p2.ctor === 'Err') {
+	var _p3 = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Decoders$model, _user$project$Main$example);
+	if (_p3.ctor === 'Err') {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
 				start: {line: 32, column: 3},
 				end: {line: 41, column: 87}
 			},
-			_p2)(_p2._0);
+			_p3)(_p3._0);
 	} else {
-		var _p4 = _p2._0;
+		var _p5 = _p3._0;
 		var clear = F2(
 			function (position, grid) {
 				return A3(_user$project$Model$setCell, position, _user$project$Model$Empty, grid);
@@ -8959,15 +8980,16 @@ var _user$project$Main$init = function () {
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
-				_p4,
+				_p5,
 				{
-					grid: A3(_elm_lang$core$List$foldl, clearAnswer, _p4.grid, _p4.answers)
+					grid: A3(_elm_lang$core$List$foldl, clearAnswer, _p5.grid, _p5.answers)
 				}),
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	}
 }();
 var _user$project$Main$NoOp = {ctor: 'NoOp'};
+var _user$project$Main$NextClue = {ctor: 'NextClue'};
 var _user$project$Main$ChangeDirection = {ctor: 'ChangeDirection'};
 var _user$project$Main$SetCell = function (a) {
 	return {ctor: 'SetCell', _0: a};
@@ -8978,8 +9000,8 @@ var _user$project$Main$SetCursor = function (a) {
 var _user$project$Main$viewCell = F5(
 	function (model, position, selected, active, number) {
 		var clueNumber = function () {
-			var _p5 = number;
-			if (_p5.ctor === 'Just') {
+			var _p6 = number;
+			if (_p6.ctor === 'Just') {
 				return A2(
 					_elm_lang$html$Html$span,
 					_elm_lang$core$Native_List.fromArray(
@@ -8989,7 +9011,7 @@ var _user$project$Main$viewCell = F5(
 					_elm_lang$core$Native_List.fromArray(
 						[
 							_elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p5._0))
+							_elm_lang$core$Basics$toString(_p6._0))
 						]));
 			} else {
 				return A2(
@@ -9004,8 +9026,8 @@ var _user$project$Main$viewCell = F5(
 			_user$project$Main$SetCursor(position));
 		var background = selected ? _user$project$Main$backgroundColor(_user$project$Main$yellow) : (active ? _user$project$Main$backgroundColor(_user$project$Main$blue) : _elm_lang$core$Native_List.fromArray(
 			[]));
-		var _p6 = model;
-		switch (_p6.ctor) {
+		var _p7 = model;
+		switch (_p7.ctor) {
 			case 'Empty':
 				return A2(
 					_elm_lang$html$Html$td,
@@ -9047,7 +9069,7 @@ var _user$project$Main$viewCell = F5(
 						[
 							clueNumber,
 							_elm_lang$html$Html$text(
-							_elm_lang$core$String$fromChar(_p6._0))
+							_elm_lang$core$String$fromChar(_p7._0))
 						]));
 		}
 	});
@@ -9070,14 +9092,14 @@ var _user$project$Main$viewRow = F3(
 				model.cellNumbers);
 		};
 		var cell = function (col) {
-			var _p7 = A2(
+			var _p8 = A2(
 				_user$project$Model$getCell,
 				{ctor: '_Tuple2', _0: row, _1: col},
 				model.grid);
-			if (_p7.ctor === 'Just') {
+			if (_p8.ctor === 'Just') {
 				return A5(
 					_user$project$Main$viewCell,
-					_p7._0,
+					_p8._0,
 					{ctor: '_Tuple2', _0: row, _1: col},
 					_elm_lang$core$Native_Utils.eq(
 						{ctor: '_Tuple2', _0: row, _1: col},
@@ -9190,8 +9212,8 @@ var _user$project$Main$right = A2(_user$project$Main$MoveCursor, 0, 1);
 var _user$project$Main$up = A2(_user$project$Main$MoveCursor, -1, 0);
 var _user$project$Main$down = A2(_user$project$Main$MoveCursor, 1, 0);
 var _user$project$Main$keyCodeToChar = function (keyCode) {
-	var _p8 = keyCode;
-	switch (_p8) {
+	var _p9 = keyCode;
+	switch (_p9) {
 		case 32:
 			return _user$project$Main$ChangeDirection;
 		case 37:
@@ -9204,6 +9226,8 @@ var _user$project$Main$keyCodeToChar = function (keyCode) {
 			return _user$project$Main$down;
 		case 8:
 			return _user$project$Main$SetCell(_user$project$Model$Empty);
+		case 13:
+			return _user$project$Main$NextClue;
 		default:
 			return ((_elm_lang$core$Native_Utils.cmp(keyCode, 65) > -1) && (_elm_lang$core$Native_Utils.cmp(keyCode, 90) < 1)) ? _user$project$Main$SetCell(
 				_user$project$Model$Value(
@@ -9217,38 +9241,38 @@ var _user$project$Main$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p9 = msg;
-			_v6_4:
+			var _p10 = msg;
+			_v9_5:
 			do {
-				switch (_p9.ctor) {
+				switch (_p10.ctor) {
 					case 'SetCursor':
-						if (_p9._0.ctor === '_Tuple2') {
-							var _p10 = model.cursor;
-							var row = _p10._0;
-							var col = _p10._1;
-							var _v7 = A2(_user$project$Main$MoveCursor, _p9._0._0 - row, _p9._0._1 - col),
-								_v8 = model;
-							msg = _v7;
-							model = _v8;
+						if (_p10._0.ctor === '_Tuple2') {
+							var _p11 = model.cursor;
+							var row = _p11._0;
+							var col = _p11._1;
+							var _v10 = A2(_user$project$Main$MoveCursor, _p10._0._0 - row, _p10._0._1 - col),
+								_v11 = model;
+							msg = _v10;
+							model = _v11;
 							continue update;
 						} else {
-							break _v6_4;
+							break _v9_5;
 						}
 					case 'MoveCursor':
-						var _p11 = model.size;
-						var width = _p11.width;
-						var height = _p11.height;
-						var _p12 = model.cursor;
-						var row = _p12._0;
-						var col = _p12._1;
+						var _p12 = model.size;
+						var width = _p12.width;
+						var height = _p12.height;
+						var _p13 = model.cursor;
+						var row = _p13._0;
+						var col = _p13._1;
 						var nextRow = A2(
 							_elm_lang$core$Basics$max,
 							0,
-							A2(_elm_lang$core$Basics$min, width - 1, row + _p9._0));
+							A2(_elm_lang$core$Basics$min, width - 1, row + _p10._0));
 						var nextCol = A2(
 							_elm_lang$core$Basics$max,
 							0,
-							A2(_elm_lang$core$Basics$min, height - 1, col + _p9._1));
+							A2(_elm_lang$core$Basics$min, height - 1, col + _p10._1));
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
@@ -9259,31 +9283,31 @@ var _user$project$Main$update = F2(
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					case 'SetCell':
-						var _p15 = _p9._0;
-						var _p13 = _user$project$Main$getCursorCell(model);
-						if (_p13.ctor === 'Block') {
+						var _p16 = _p10._0;
+						var _p14 = _user$project$Main$getCursorCell(model);
+						if (_p14.ctor === 'Block') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							var nextCursor = function () {
-								var _p14 = {ctor: '_Tuple2', _0: _p15, _1: model.direction};
-								_v10_3:
+								var _p15 = {ctor: '_Tuple2', _0: _p16, _1: model.direction};
+								_v13_3:
 								do {
-									if (_p14.ctor === '_Tuple2') {
-										if (_p14._1.ctor === 'Down') {
-											if (_p14._0.ctor === 'Empty') {
+									if (_p15.ctor === '_Tuple2') {
+										if (_p15._1.ctor === 'Down') {
+											if (_p15._0.ctor === 'Empty') {
 												return _user$project$Main$up;
 											} else {
-												break _v10_3;
+												break _v13_3;
 											}
 										} else {
-											if (_p14._0.ctor === 'Empty') {
+											if (_p15._0.ctor === 'Empty') {
 												return _user$project$Main$left;
 											} else {
 												return _user$project$Main$right;
 											}
 										}
 									} else {
-										break _v10_3;
+										break _v13_3;
 									}
 								} while(false);
 								return _user$project$Main$down;
@@ -9291,12 +9315,12 @@ var _user$project$Main$update = F2(
 							var nextModel = _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									grid: A2(_user$project$Main$setCursorCell, _p15, model)
+									grid: A2(_user$project$Main$setCursorCell, _p16, model)
 								});
-							var _v11 = nextCursor,
-								_v12 = nextModel;
-							msg = _v11;
-							model = _v12;
+							var _v14 = nextCursor,
+								_v15 = nextModel;
+							msg = _v14;
+							model = _v15;
 							continue update;
 						}
 					case 'ChangeDirection':
@@ -9309,8 +9333,50 @@ var _user$project$Main$update = F2(
 								}),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
+					case 'NextClue':
+						var isActive = function (answer) {
+							return A2(
+								_elm_lang$core$List$any,
+								F2(
+									function (x, y) {
+										return _elm_lang$core$Native_Utils.eq(x, y);
+									})(model.cursor),
+								answer.locations);
+						};
+						var clueList = A2(
+							_elm_lang$core$List$filter,
+							function (a) {
+								return _elm_lang$core$Native_Utils.eq(a.direction, model.direction);
+							},
+							model.answers);
+						var activeClues = A2(_elm_lang$core$List$filter, isActive, clueList);
+						var _p17 = activeClues;
+						if ((_p17.ctor === '::') && (_p17._1.ctor === '[]')) {
+							var _p18 = A2(
+								_user$project$Main$dropWhile,
+								function (a) {
+									return !_elm_lang$core$Native_Utils.eq(a.number, _p17._0.number);
+								},
+								clueList);
+							if ((_p18.ctor === '::') && (_p18._1.ctor === '::')) {
+								var _p19 = _elm_lang$core$List$head(_p18._1._0.locations);
+								if (_p19.ctor === 'Just') {
+									var _v19 = _user$project$Main$SetCursor(_p19._0),
+										_v20 = model;
+									msg = _v19;
+									model = _v20;
+									continue update;
+								} else {
+									return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+								}
+							} else {
+								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+							}
+						} else {
+							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						}
 					default:
-						break _v6_4;
+						break _v9_5;
 				}
 			} while(false);
 			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
