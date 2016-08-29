@@ -85,17 +85,27 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     SetCursor (toRow, toCol) ->
-      let (row, col) = model.cursor in
-        update (MoveCursor (toRow - row) (toCol - col)) model
+      let
+        { width, height } = model.size
+        nextRow = toRow |> min (width - 1) |> max 0
+        nextCol = toCol |> min (height - 1) |> max 0
+      in
+        ({ model | cursor = (nextRow, nextCol) }, Cmd.none)
 
     MoveCursor rowDelta colDelta ->
       let
-        (row, col) = model.cursor
-        { width, height } = model.size
-        nextRow = row + rowDelta |> min (width - 1) |> max 0
-        nextCol = col + colDelta |> min (height - 1) |> max 0
+        reposition (row, col) = (row + rowDelta, col + colDelta)
+
+        findPosition pos =
+          case (getCell pos model.grid) of
+            Just Block -> findPosition (reposition pos)
+            Just _ -> Just pos
+            _ -> Nothing
       in
-        ({ model | cursor = (nextRow, nextCol) }, Cmd.none)
+        case (findPosition (reposition model.cursor)) of
+          Just pos -> ({ model | cursor = pos }, Cmd.none)
+          _ -> (model, Cmd.none)
+
 
     SetCell c ->
       case (getCursorCell model) of
