@@ -61,6 +61,7 @@ type Msg
   | SetCursor Position
   | SetCell Cell
   | ChangeDirection
+  | NextClue
   | NoOp
 
 
@@ -113,7 +114,30 @@ update msg model =
     ChangeDirection ->
       ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
 
+    NextClue ->
+      let
+        clueList = List.filter (\a -> a.direction == model.direction) model.answers
+        isActive answer = answer.locations |> List.any ((==) model.cursor)
+        activeClues = List.filter isActive clueList
+      in
+        case activeClues of
+          clue :: [] ->
+            case (dropWhile (\a -> a.number /= clue.number) clueList) of
+              clue :: nextClue :: _ -> case (List.head nextClue.locations) of
+                Just position -> update (SetCursor position) model
+                _ -> (model, Cmd.none)
+              _ -> (model, Cmd.none)
+          _ -> (model, Cmd.none)
+
+
     _ -> (model, Cmd.none)
+
+
+dropWhile : (a -> Bool) -> List a -> List a
+dropWhile pred list =
+  case list of
+    x :: xs -> if (pred x) then dropWhile pred xs else list
+    [] -> []
 
 
 -- view
@@ -184,7 +208,7 @@ viewClues : Model -> Direction -> List Answer -> Html Msg
 viewClues model direction activeClues =
   let
     isActiveClue clue = List.any ((==) clue) activeClues
-    clues = model.answers |> List.filter (\s -> s.direction == direction) |> List.sortBy .number
+    clues = model.answers |> List.filter (\s -> s.direction == direction)
   in
     div [ style clueListStyle ]
       [ h2 [ style h2Style ] [ text (toString direction) ]
@@ -215,6 +239,7 @@ keyCodeToChar keyCode =
     39 -> right
     40 -> down
     8 -> SetCell Empty
+    13 -> NextClue -- TODO: this should be tab, but ugh, preventDefaults...
     _ -> if (keyCode >= 65 && keyCode <= 90)
          then keyCode |> Char.fromCode |> Value |> SetCell
          else NoOp
