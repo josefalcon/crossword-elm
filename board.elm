@@ -121,54 +121,66 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-  div [ style [ ("padding", "1rem") ] ]
-    [ viewGrid model
-    , viewClues model Across
-    , viewClues model Down
-    ]
+  let
+    activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
+  in
+    div [ style [ ("padding", "1rem") ] ]
+      [ viewGrid model activeClues
+      , viewClues model Across activeClues
+      , viewClues model Down activeClues
+      ]
 
 
-viewGrid : Model -> Html Msg
-viewGrid model =
-  table [ style [ ("border-collapse", "collapse") ] ]
-    [ tbody [] (List.map (viewRow model) [0..(model.size.height - 1)]) ]
+viewGrid : Model -> List Answer -> Html Msg
+viewGrid model activeClues =
+  let
+    activeCells = (List.concatMap .locations (List.filter (\a -> a.direction == model.direction) activeClues))
+  in
+    table [ style [ ("border-collapse", "collapse") ] ]
+      [ tbody [] (List.map (viewRow model activeCells) [0..(model.size.height - 1)]) ]
 
 
-viewRow : Model -> Int -> Html Msg
-viewRow model row =
+viewRow : Model -> List Position -> Int -> Html Msg
+viewRow model activeCells row =
   let
     number col = (Dict.get (row, col) model.cellNumbers)
+
+    activeCell col = List.any ((==) (row, col)) activeCells
+
     cell col = case (getCell (row, col) model.grid) of
-      Just c -> viewCell c (row, col) ((row, col) == model.cursor) (number col)
+      Just c -> viewCell c (row, col) ((row, col) == model.cursor) (activeCell col) (number col)
       Nothing -> td [] []
   in
     tr [] (List.map cell [0..(model.size.width - 1)])
 
 
-viewCell : Cell -> Position -> Bool -> Maybe Int -> Html Msg
-viewCell model position selected number =
+viewCell : Cell -> Position -> Bool -> Bool -> Maybe Int -> Html Msg
+viewCell model position selected active number =
   let
-    maybeYellow = if selected then (backgroundColor "yellow") else []
+    background = if selected then (backgroundColor yellow)
+      else if active then (backgroundColor blue)
+      else []
+
     clicker = onClick (SetCursor position)
+
     clueNumber = case number of
       Just n -> span [ style numberStyle ] [ n |> toString |> text ]
       Nothing -> span [] []
   in
     case model of
       Empty ->
-        td [ clicker, style (cellStyle ++ maybeYellow) ] [ clueNumber ]
+        td [ clicker, style (cellStyle ++ background) ] [ clueNumber ]
 
       Block ->
-        td [ clicker, style (cellStyle ++ (backgroundColor "black") ++ maybeYellow) ] []
+        td [ clicker, style (cellStyle ++ (backgroundColor "black") ++ background) ] []
 
       Value c ->
-        td [ clicker, style (cellStyle ++ maybeYellow) ] [ clueNumber, text (String.fromChar c) ]
+        td [ clicker, style (cellStyle ++ background) ] [ clueNumber, text (String.fromChar c) ]
 
 
-viewClues : Model -> Direction -> Html Msg
-viewClues model direction =
+viewClues : Model -> Direction -> List Answer -> Html Msg
+viewClues model direction activeClues =
   let
-    activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
     isActiveClue clue = List.any ((==) clue) activeClues
     clues = model.answers |> List.filter (\s -> s.direction == direction) |> List.sortBy .number
   in
@@ -181,7 +193,7 @@ viewClues model direction =
 viewClue : Answer -> Bool -> Html Msg
 viewClue clue active =
   let
-    highlight = if active then (backgroundColor "red") else []
+    highlight = if active then (backgroundColor blue) else []
   in
     li [ style (clueStyle ++ highlight) ]
       [ text ((toString clue.number) ++ " ")
@@ -212,6 +224,14 @@ subscriptions model =
 
 
 -- css
+
+
+yellow : String
+yellow = "#ffeb3b"
+
+
+blue : String
+blue = "#b7dbf9"
 
 
 backgroundColor : String -> List (String, String)
