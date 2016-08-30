@@ -8685,9 +8685,9 @@ var _user$project$Model$getCell = F2(
 			A2(_elm_lang$core$Array$get, _p5._0, grid),
 			_elm_lang$core$Array$get(_p5._1));
 	});
-var _user$project$Model$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {size: a, grid: b, answers: c, cursor: d, direction: e, cellNumbers: f};
+var _user$project$Model$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {size: a, grid: b, answers: c, cursor: d, direction: e, cellNumbers: f, message: g};
 	});
 var _user$project$Model$Dimensions = F2(
 	function (a, b) {
@@ -8784,7 +8784,8 @@ var _user$project$Decoders$model = function () {
 					},
 					answers),
 				direction: _user$project$Model$Across,
-				cellNumbers: _user$project$Decoders$cellNumbers(answers)
+				cellNumbers: _user$project$Decoders$cellNumbers(answers),
+				message: _elm_lang$core$Maybe$Nothing
 			};
 		});
 	return A3(
@@ -8950,8 +8951,8 @@ var _user$project$Main$getCursorCell = function (model) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 46, column: 3},
-				end: {line: 48, column: 43}
+				start: {line: 47, column: 3},
+				end: {line: 49, column: 43}
 			},
 			_p1)('Invalid state');
 	}
@@ -8963,8 +8964,8 @@ var _user$project$Main$init = function () {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 32, column: 3},
-				end: {line: 41, column: 87}
+				start: {line: 33, column: 3},
+				end: {line: 42, column: 87}
 			},
 			_p3)(_p3._0);
 	} else {
@@ -8989,6 +8990,8 @@ var _user$project$Main$init = function () {
 	}
 }();
 var _user$project$Main$NoOp = {ctor: 'NoOp'};
+var _user$project$Main$ClearMessage = {ctor: 'ClearMessage'};
+var _user$project$Main$Validate = {ctor: 'Validate'};
 var _user$project$Main$NextClue = {ctor: 'NextClue'};
 var _user$project$Main$ChangeDirection = {ctor: 'ChangeDirection'};
 var _user$project$Main$SetCell = function (a) {
@@ -9173,6 +9176,43 @@ var _user$project$Main$viewGrid = F2(
 				]));
 	});
 var _user$project$Main$view = function (model) {
+	var maybeMessage = function () {
+		var _p9 = model.message;
+		if (_p9.ctor === 'Just') {
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$h3,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text(_p9._0)
+							])),
+						A2(
+						_elm_lang$html$Html$button,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Events$onClick(_user$project$Main$ClearMessage)
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Ok')
+							]))
+					]));
+		} else {
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		}
+	}();
 	var activeClues = A2(
 		_elm_lang$core$List$filter,
 		function (a) {
@@ -9198,6 +9238,7 @@ var _user$project$Main$view = function (model) {
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
+				maybeMessage,
 				A2(_user$project$Main$viewGrid, model, activeClues),
 				A3(_user$project$Main$viewClues, model, _user$project$Model$Across, activeClues),
 				A3(_user$project$Main$viewClues, model, _user$project$Model$Down, activeClues)
@@ -9215,173 +9256,244 @@ var _user$project$Main$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p9 = msg;
-			_v8_5:
-			do {
-				switch (_p9.ctor) {
-					case 'SetCursor':
-						if (_p9._0.ctor === '_Tuple2') {
-							var _p10 = model.size;
-							var width = _p10.width;
-							var height = _p10.height;
-							var nextRow = A2(
-								_elm_lang$core$Basics$max,
-								0,
-								A2(_elm_lang$core$Basics$min, width - 1, _p9._0._0));
-							var nextCol = A2(
-								_elm_lang$core$Basics$max,
-								0,
-								A2(_elm_lang$core$Basics$min, height - 1, _p9._0._1));
+			var _p10 = {ctor: '_Tuple2', _0: msg, _1: model.message};
+			if ((_p10.ctor === '_Tuple2') && (_p10._1.ctor === 'Just')) {
+				if (_p10._0.ctor === 'ClearMessage') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{message: _elm_lang$core$Maybe$Nothing}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
+			} else {
+				var _p11 = msg;
+				_v10_6:
+				do {
+					switch (_p11.ctor) {
+						case 'SetCursor':
+							if (_p11._0.ctor === '_Tuple2') {
+								var _p12 = model.size;
+								var width = _p12.width;
+								var height = _p12.height;
+								var nextRow = A2(
+									_elm_lang$core$Basics$max,
+									0,
+									A2(_elm_lang$core$Basics$min, width - 1, _p11._0._0));
+								var nextCol = A2(
+									_elm_lang$core$Basics$max,
+									0,
+									A2(_elm_lang$core$Basics$min, height - 1, _p11._0._1));
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											cursor: {ctor: '_Tuple2', _0: nextRow, _1: nextCol}
+										}),
+									_1: _elm_lang$core$Platform_Cmd$none
+								};
+							} else {
+								break _v10_6;
+							}
+						case 'MoveCursor':
+							var reposition = function (_p13) {
+								var _p14 = _p13;
+								return {ctor: '_Tuple2', _0: _p14._0 + _p11._0, _1: _p14._1 + _p11._1};
+							};
+							var findPosition = function (pos) {
+								findPosition:
+								while (true) {
+									var _p15 = A2(_user$project$Model$getCell, pos, model.grid);
+									if (_p15.ctor === 'Just') {
+										if (_p15._0.ctor === 'Block') {
+											var _v13 = reposition(pos);
+											pos = _v13;
+											continue findPosition;
+										} else {
+											return _elm_lang$core$Maybe$Just(pos);
+										}
+									} else {
+										return _elm_lang$core$Maybe$Nothing;
+									}
+								}
+							};
+							var _p16 = findPosition(
+								reposition(model.cursor));
+							if (_p16.ctor === 'Just') {
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Native_Utils.update(
+										model,
+										{cursor: _p16._0}),
+									_1: _elm_lang$core$Platform_Cmd$none
+								};
+							} else {
+								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+							}
+						case 'SetCell':
+							var _p19 = _p11._0;
+							var _p17 = _user$project$Main$getCursorCell(model);
+							if (_p17.ctor === 'Block') {
+								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+							} else {
+								var nextCursor = function () {
+									var _p18 = {ctor: '_Tuple2', _0: _p19, _1: model.direction};
+									_v16_3:
+									do {
+										if (_p18.ctor === '_Tuple2') {
+											if (_p18._1.ctor === 'Down') {
+												if (_p18._0.ctor === 'Empty') {
+													return _user$project$Main$up;
+												} else {
+													break _v16_3;
+												}
+											} else {
+												if (_p18._0.ctor === 'Empty') {
+													return _user$project$Main$left;
+												} else {
+													return _user$project$Main$right;
+												}
+											}
+										} else {
+											break _v16_3;
+										}
+									} while(false);
+									return _user$project$Main$down;
+								}();
+								var nextGrid = A2(_user$project$Main$setCursorCell, _p19, model);
+								var nextModel = _elm_lang$core$Native_Utils.update(
+									model,
+									{grid: nextGrid});
+								var isFilled = A2(
+									_elm_lang$core$List$all,
+									F2(
+										function (x, y) {
+											return !_elm_lang$core$Native_Utils.eq(x, y);
+										})(_user$project$Model$Empty),
+									A2(
+										_elm_lang$core$List$concatMap,
+										_elm_lang$core$Array$toList,
+										_elm_lang$core$Array$toList(nextGrid)));
+								if (isFilled) {
+									var _v17 = _user$project$Main$Validate,
+										_v18 = nextModel;
+									msg = _v17;
+									model = _v18;
+									continue update;
+								} else {
+									var _v19 = nextCursor,
+										_v20 = nextModel;
+									msg = _v19;
+									model = _v20;
+									continue update;
+								}
+							}
+						case 'ChangeDirection':
 							return {
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Native_Utils.update(
 									model,
 									{
-										cursor: {ctor: '_Tuple2', _0: nextRow, _1: nextCol}
+										direction: _elm_lang$core$Native_Utils.eq(model.direction, _user$project$Model$Across) ? _user$project$Model$Down : _user$project$Model$Across
 									}),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
-						} else {
-							break _v8_5;
-						}
-					case 'MoveCursor':
-						var reposition = function (_p11) {
-							var _p12 = _p11;
-							return {ctor: '_Tuple2', _0: _p12._0 + _p9._0, _1: _p12._1 + _p9._1};
-						};
-						var findPosition = function (pos) {
-							findPosition:
-							while (true) {
-								var _p13 = A2(_user$project$Model$getCell, pos, model.grid);
-								if (_p13.ctor === 'Just') {
-									if (_p13._0.ctor === 'Block') {
-										var _v11 = reposition(pos);
-										pos = _v11;
-										continue findPosition;
-									} else {
-										return _elm_lang$core$Maybe$Just(pos);
-									}
-								} else {
-									return _elm_lang$core$Maybe$Nothing;
-								}
-							}
-						};
-						var _p14 = findPosition(
-							reposition(model.cursor));
-						if (_p14.ctor === 'Just') {
-							return {
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Native_Utils.update(
-									model,
-									{cursor: _p14._0}),
-								_1: _elm_lang$core$Platform_Cmd$none
+						case 'NextClue':
+							var isActive = function (answer) {
+								return A2(
+									_elm_lang$core$List$any,
+									F2(
+										function (x, y) {
+											return _elm_lang$core$Native_Utils.eq(x, y);
+										})(model.cursor),
+									answer.locations);
 							};
-						} else {
-							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-						}
-					case 'SetCell':
-						var _p17 = _p9._0;
-						var _p15 = _user$project$Main$getCursorCell(model);
-						if (_p15.ctor === 'Block') {
-							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-						} else {
-							var nextCursor = function () {
-								var _p16 = {ctor: '_Tuple2', _0: _p17, _1: model.direction};
-								_v14_3:
-								do {
-									if (_p16.ctor === '_Tuple2') {
-										if (_p16._1.ctor === 'Down') {
-											if (_p16._0.ctor === 'Empty') {
-												return _user$project$Main$up;
-											} else {
-												break _v14_3;
-											}
-										} else {
-											if (_p16._0.ctor === 'Empty') {
-												return _user$project$Main$left;
-											} else {
-												return _user$project$Main$right;
-											}
-										}
-									} else {
-										break _v14_3;
-									}
-								} while(false);
-								return _user$project$Main$down;
-							}();
-							var nextModel = _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									grid: A2(_user$project$Main$setCursorCell, _p17, model)
-								});
-							var _v15 = nextCursor,
-								_v16 = nextModel;
-							msg = _v15;
-							model = _v16;
-							continue update;
-						}
-					case 'ChangeDirection':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									direction: _elm_lang$core$Native_Utils.eq(model.direction, _user$project$Model$Across) ? _user$project$Model$Down : _user$project$Model$Across
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
-					case 'NextClue':
-						var isActive = function (answer) {
-							return A2(
-								_elm_lang$core$List$any,
-								F2(
-									function (x, y) {
-										return _elm_lang$core$Native_Utils.eq(x, y);
-									})(model.cursor),
-								answer.locations);
-						};
-						var clueList = A2(
-							_elm_lang$core$List$filter,
-							function (a) {
-								return _elm_lang$core$Native_Utils.eq(a.direction, model.direction);
-							},
-							model.answers);
-						var activeClues = A2(_elm_lang$core$List$filter, isActive, clueList);
-						var _p18 = activeClues;
-						if ((_p18.ctor === '::') && (_p18._1.ctor === '[]')) {
-							var _p19 = A2(
-								_user$project$Main$dropWhile,
+							var clueList = A2(
+								_elm_lang$core$List$filter,
 								function (a) {
-									return !_elm_lang$core$Native_Utils.eq(a.number, _p18._0.number);
+									return _elm_lang$core$Native_Utils.eq(a.direction, model.direction);
 								},
-								clueList);
-							if ((_p19.ctor === '::') && (_p19._1.ctor === '::')) {
-								var _p20 = _elm_lang$core$List$head(_p19._1._0.locations);
-								if (_p20.ctor === 'Just') {
-									var _v20 = _user$project$Main$SetCursor(_p20._0),
-										_v21 = model;
-									msg = _v20;
-									model = _v21;
-									continue update;
+								model.answers);
+							var activeClues = A2(_elm_lang$core$List$filter, isActive, clueList);
+							var _p20 = activeClues;
+							if ((_p20.ctor === '::') && (_p20._1.ctor === '[]')) {
+								var _p21 = A2(
+									_user$project$Main$dropWhile,
+									function (a) {
+										return !_elm_lang$core$Native_Utils.eq(a.number, _p20._0.number);
+									},
+									clueList);
+								if ((_p21.ctor === '::') && (_p21._1.ctor === '::')) {
+									var _p22 = _elm_lang$core$List$head(_p21._1._0.locations);
+									if (_p22.ctor === 'Just') {
+										var _v24 = _user$project$Main$SetCursor(_p22._0),
+											_v25 = model;
+										msg = _v24;
+										model = _v25;
+										continue update;
+									} else {
+										return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+									}
 								} else {
 									return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 								}
 							} else {
 								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 							}
-						} else {
-							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-						}
-					default:
-						break _v8_5;
-				}
-			} while(false);
-			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						case 'Validate':
+							var locationsWithLetter = function (answer) {
+								return A3(
+									_elm_lang$core$List$map2,
+									F2(
+										function (v0, v1) {
+											return {ctor: '_Tuple2', _0: v0, _1: v1};
+										}),
+									answer.locations,
+									A2(_elm_lang$core$String$split, '', answer.answer));
+							};
+							var assertLetter = function (_p23) {
+								var _p24 = _p23;
+								var _p25 = A2(_user$project$Model$getCell, _p24._0, model.grid);
+								if ((_p25.ctor === 'Just') && (_p25._0.ctor === 'Value')) {
+									return _elm_lang$core$Native_Utils.eq(
+										_elm_lang$core$String$toLower(
+											_elm_lang$core$String$fromChar(_p25._0._0)),
+										_p24._1);
+								} else {
+									return false;
+								}
+							};
+							var validateAnswer = function (answer) {
+								return A2(
+									_elm_lang$core$List$all,
+									assertLetter,
+									locationsWithLetter(answer));
+							};
+							var message = A2(_elm_lang$core$List$all, validateAnswer, model.answers) ? 'Correct' : 'At least one letter is wrong';
+							return {
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Native_Utils.update(
+									model,
+									{
+										message: _elm_lang$core$Maybe$Just(message)
+									}),
+								_1: _elm_lang$core$Platform_Cmd$none
+							};
+						default:
+							break _v10_6;
+					}
+				} while(false);
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			}
 		}
 	});
 var _user$project$Main$keyCodeToChar = function (keyCode) {
-	var _p21 = keyCode;
-	switch (_p21) {
+	var _p26 = keyCode;
+	switch (_p26) {
 		case 32:
 			return _user$project$Main$ChangeDirection;
 		case 37:
