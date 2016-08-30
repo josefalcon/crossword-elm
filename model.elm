@@ -12,6 +12,7 @@ type alias Model =
   , cursor : Position
   , direction : Direction
   , cellNumbers : Dict Position Int
+  , message : Maybe String
   }
 
 

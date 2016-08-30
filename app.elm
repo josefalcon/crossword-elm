@@ -8,6 +8,7 @@ import Dict
 import List
 import Maybe
 import String
+import Array
 import Model exposing (..)
 import Decoders exposing (..)
 import Json.Decode exposing (decodeString)
@@ -62,6 +63,8 @@ type Msg
   | SetCell Cell
   | ChangeDirection
   | NextClue
+  | Validate
+  | ClearMessage
   | NoOp
 
 
@@ -83,7 +86,10 @@ down = MoveCursor 1 0
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  case msg of
+  case (msg, model.message) of
+    (ClearMessage, Just _) -> ({ model | message = Nothing }, Cmd.none)
+    (_, Just _) -> (model, Cmd.none)
+    _ -> case msg of
     SetCursor (toRow, toCol) ->
       let
         { width, height } = model.size
@@ -112,14 +118,20 @@ update msg model =
         Block -> (model, Cmd.none)
         _ ->
           let
-            nextModel = { model | grid = setCursorCell c model }
+            nextGrid = setCursorCell c model
+            nextModel = { model | grid = nextGrid }
             nextCursor = case (c, model.direction) of
               (Empty, Across) -> left
               (Empty, Down) -> up
               (_, Across) -> right
               _ -> down
+            isFilled =
+              nextGrid |> Array.toList |> List.concatMap Array.toList |> List.all ((/=) Empty)
           in
-            update nextCursor nextModel
+            if (isFilled) then
+              update Validate nextModel
+            else
+              update nextCursor nextModel
 
     ChangeDirection ->
       ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
@@ -139,6 +151,21 @@ update msg model =
               _ -> (model, Cmd.none)
           _ -> (model, Cmd.none)
 
+    Validate ->
+      let
+        assertLetter (loc, letter) = case (getCell loc model.grid) of
+          Just (Value c) -> (c |> String.fromChar |> String.toLower) == letter
+          _ -> False
+        locationsWithLetter answer = answer.answer |> String.split "" |> List.map2 (,) answer.locations
+        validateAnswer answer = (locationsWithLetter answer) |> List.all assertLetter
+      in
+        let
+          message = if (List.all validateAnswer model.answers) then
+            "Correct"
+          else
+            "At least one letter is wrong"
+        in
+          ({ model | message = Just message }, Cmd.none)
 
     _ -> (model, Cmd.none)
 
@@ -157,9 +184,17 @@ view : Model -> Html Msg
 view model =
   let
     activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
+    maybeMessage = case model.message of
+      Just m ->
+        div []
+          [ h3 [] [ text m ]
+          , button [ onClick ClearMessage ] [ text "Ok"]
+          ]
+      Nothing -> div [] []
   in
     div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
-      [ viewGrid model activeClues
+      [ maybeMessage
+      , viewGrid model activeClues
       , viewClues model Across activeClues
       , viewClues model Down activeClues
       ]

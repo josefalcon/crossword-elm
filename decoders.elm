@@ -49,6 +49,7 @@ model =
       , answers = answers |> List.sortBy .number
       , direction = Across
       , cellNumbers = cellNumbers answers
+      , message = Nothing
       }
   in
     object2 initialModel
