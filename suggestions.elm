@@ -5,6 +5,7 @@ import Html.App as App
 import Html.Events exposing (..)
 import Http
 import Task
+import String
 import Json.Decode exposing (Decoder, (:=), list, string, object2, maybe, map)
 import Json.Encode
 import VirtualDom
@@ -60,13 +61,15 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     SetPattern p ->
-      update LoadSuggestions { model | pattern = p }
+      update LoadSuggestions { model | pattern = p, from = 0 }
 
     SetIncludeWikipedia w ->
-      update LoadSuggestions { model | includeWikipedia = w }
+      update LoadSuggestions { model | includeWikipedia = w, from = 0 }
 
     LoadSuggestions ->
-      (model, loadSuggestions model)
+      if (String.isEmpty model.pattern)
+        then (model, Cmd.none)
+        else (model, loadSuggestions model)
 
     FetchSucceed (suggestions, hasNext) ->
       ({ model | suggestions = suggestions, hasNext = hasNext }, Cmd.none)
