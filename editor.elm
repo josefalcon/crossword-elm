@@ -9,7 +9,8 @@ import List
 import Maybe
 import String
 import Array
-import Model exposing (..)
+import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Answer)
+import Suggestions
 
 
 main =
@@ -21,6 +22,14 @@ main =
     }
 
 
+type alias Model =
+  { size : Dimensions
+  , cursor : Position
+  , grid : Grid
+  , suggestions : Suggestions.Model
+  }
+
+
 init : (Model, Cmd Msg)
 init =
   let
@@ -28,10 +37,7 @@ init =
       { size = { width = 9, height = 9}
       , grid = Array.repeat 9 (Array.repeat 9 Empty)
       , cursor = (0, 0)
-      , answers = []
-      , direction = Across
-      , cellNumbers = Dict.empty
-      , message = Nothing
+      , suggestions = (fst Suggestions.init)
       }
   in
     (model, Cmd.none)
@@ -49,7 +55,8 @@ type Msg
   = MoveCursor Int Int
   | SetCursor Position
   | SetCell Cell
-  | ChangeDirection
+  -- | ChangeDirection
+  | SuggestionsMsg Suggestions.Msg
   | NoOp
 
 
@@ -88,17 +95,24 @@ update msg model =
     SetCell c ->
       let
         nextGrid = setCursorCell c model
-        nextModel = { model | grid = nextGrid }
-        nextCursor = case (c, model.direction) of
-          (Empty, Across) -> left
-          (Empty, Down) -> up
-          (_, Across) -> right
-          _ -> down
+        -- nextModel = { model | grid = nextGrid }
+        -- nextCursor = case (c, model.direction) of
+        --   (Empty, Across) -> left
+        --   (Empty, Down) -> up
+        --   (_, Across) -> right
+        --   _ -> down
       in
-        update nextCursor nextModel
+        -- update nextCursor nextModel
+        ({ model | grid = nextGrid }, Cmd.none)
 
-    ChangeDirection ->
-      ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
+    -- ChangeDirection ->
+    --   ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
+
+    SuggestionsMsg msg ->
+      let
+        (nextSuggesstions, cmd) = Suggestions.update msg model.suggestions
+      in
+        ({ model | suggestions = nextSuggesstions }, Cmd.map (SuggestionsMsg) cmd)
 
     _ -> (model, Cmd.none)
 
@@ -108,43 +122,36 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+  div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
+    [ viewGrid model
+    , div [ style [("flex-basis", "100%")] ]
+        [ App.map (SuggestionsMsg) (Suggestions.view model.suggestions)
+        ]
+    ]
+
+
+viewGrid : Model -> Html Msg
+viewGrid model =
+  div [ style [ ("flex-basis", "100%") ] ]
+    [ table [ style [ ("border-collapse", "collapse") ] ]
+      [ tbody [] (List.map (viewRow model) [0..(model.size.height - 1)]) ]
+    ]
+
+
+viewRow : Model -> Int -> Html Msg
+viewRow model row =
   let
-    activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
-  in
-    div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
-      [ viewGrid model activeClues
-      ]
-
-
-viewGrid : Model -> List Answer -> Html Msg
-viewGrid model activeClues =
-  let
-    activeCells = (List.concatMap .locations (List.filter (\a -> a.direction == model.direction) activeClues))
-  in
-    div [ style [ ("flex-basis", "100%") ] ]
-      [ table [ style [ ("border-collapse", "collapse") ] ]
-        [ tbody [] (List.map (viewRow model activeCells) [0..(model.size.height - 1)]) ]
-      ]
-
-
-viewRow : Model -> List Position -> Int -> Html Msg
-viewRow model activeCells row =
-  let
-    activeCell col = List.any ((==) (row, col)) activeCells
-
     cell col = case (getCell (row, col) model.grid) of
-      Just c -> viewCell c (row, col) ((row, col) == model.cursor) (activeCell col)
+      Just c -> viewCell c (row, col) ((row, col) == model.cursor)
       Nothing -> td [] []
   in
     tr [] (List.map cell [0..(model.size.width - 1)])
 
 
-viewCell : Cell -> Position -> Bool -> Bool -> Html Msg
-viewCell model position selected active =
+viewCell : Cell -> Position -> Bool -> Html Msg
+viewCell model position selected =
   let
-    background = if selected then (backgroundColor yellow)
-      else if active then (backgroundColor blue)
-      else []
+    background = if selected then (backgroundColor yellow) else []
 
     clicker = onClick (SetCursor position)
   in
@@ -165,7 +172,7 @@ viewCell model position selected active =
 keyCodeToChar : Keyboard.KeyCode -> Msg
 keyCodeToChar keyCode =
   case keyCode of
-    32 -> ChangeDirection
+    -- 32 -> ChangeDirection
     37 -> left
     38 -> up
     39 -> right
