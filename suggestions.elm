@@ -1,3 +1,4 @@
+module Suggestions exposing (Model, Msg(SetPattern), init, update, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (href, target, value, type', checked)
@@ -37,7 +38,7 @@ type alias Model =
 
 init : (Model, Cmd Msg)
 init =
-  ({ pattern = "can"
+  ({ pattern = ""
   , suggestions = []
   , size = 25
   , from = 0
