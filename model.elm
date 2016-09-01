@@ -13,6 +13,7 @@ type alias Model =
   , direction : Direction
   , cellNumbers : Dict Position Int
   , message : Maybe String
+  , activeClues : List Answer
   }
 
 

@@ -50,6 +50,7 @@ model =
       , direction = Across
       , cellNumbers = cellNumbers answers
       , message = Nothing
+      , activeClues = []
       }
   in
     object2 initialModel

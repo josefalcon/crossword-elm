@@ -95,8 +95,10 @@ update msg model =
         { width, height } = model.size
         nextRow = toRow |> min (width - 1) |> max 0
         nextCol = toCol |> min (height - 1) |> max 0
+        nextCursor = (nextRow, nextCol)
+        nextActiveClues = List.filter (\a -> (a.locations |> List.any ((==) nextCursor))) model.answers
       in
-        ({ model | cursor = (nextRow, nextCol) }, Cmd.none)
+        ({ model | cursor = nextCursor, activeClues = nextActiveClues }, Cmd.none)
 
     MoveCursor rowDelta colDelta ->
       let
@@ -109,9 +111,14 @@ update msg model =
             _ -> Nothing
       in
         case (findPosition (reposition model.cursor)) of
-          Just pos -> ({ model | cursor = pos }, Cmd.none)
-          _ -> (model, Cmd.none)
+          Just pos ->
+            let
+              nextActiveClues = List.filter (\a -> (a.locations |> List.any ((==) pos))) model.answers
+            in
+              ({ model | cursor = pos, activeClues = nextActiveClues }, Cmd.none)
 
+          _ ->
+            (model, Cmd.none)
 
     SetCell c ->
       case (getCursorCell model) of
@@ -183,7 +190,6 @@ dropWhile pred list =
 view : Model -> Html Msg
 view model =
   let
-    activeClues = List.filter (\a -> (a.locations |> List.any ((==) model.cursor))) model.answers
     maybeMessage = case model.message of
       Just m ->
         div []
@@ -194,16 +200,16 @@ view model =
   in
     div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
       [ maybeMessage
-      , viewGrid model activeClues
-      , viewClues model Across activeClues
-      , viewClues model Down activeClues
+      , viewGrid model
+      , viewClues model Across
+      , viewClues model Down
       ]
 
 
-viewGrid : Model -> List Answer -> Html Msg
-viewGrid model activeClues =
+viewGrid : Model -> Html Msg
+viewGrid model =
   let
-    activeCells = (List.concatMap .locations (List.filter (\a -> a.direction == model.direction) activeClues))
+    activeCells = (List.concatMap .locations (List.filter (\a -> a.direction == model.direction) model.activeClues))
   in
     div [ style [ ("flex-basis", "100%") ] ]
       [ table [ style [ ("border-collapse", "collapse") ] ]
@@ -249,10 +255,10 @@ viewCell model position selected active number =
         td [ clicker, style (cellStyle ++ background) ] [ clueNumber, text (String.fromChar c) ]
 
 
-viewClues : Model -> Direction -> List Answer -> Html Msg
-viewClues model direction activeClues =
+viewClues : Model -> Direction -> Html Msg
+viewClues model direction =
   let
-    isActiveClue clue = List.any ((==) clue) activeClues
+    isActiveClue clue = List.any ((==) clue) model.activeClues
     clues = model.answers |> List.filter (\s -> s.direction == direction)
   in
     div [ style clueListStyle ]
