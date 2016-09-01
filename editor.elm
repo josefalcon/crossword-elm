@@ -9,7 +9,7 @@ import List
 import Maybe
 import String
 import Array
-import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Answer)
+import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Answer, Direction(Across, Down))
 import Suggestions
 
 
@@ -25,6 +25,7 @@ main =
 type alias Model =
   { size : Dimensions
   , cursor : Position
+  , direction : Direction
   , grid : Grid
   , suggestions : Suggestions.Model
   }
@@ -37,6 +38,7 @@ init =
       { size = { width = 9, height = 9}
       , grid = Array.repeat 9 (Array.repeat 9 Empty)
       , cursor = (0, 0)
+      , direction = Across
       , suggestions = (fst Suggestions.init)
       }
   in
@@ -55,7 +57,7 @@ type Msg
   = MoveCursor Int Int
   | SetCursor Position
   | SetCell Cell
-  -- | ChangeDirection
+  | ChangeDirection
   | SuggestionsMsg Suggestions.Msg
   | NoOp
 
@@ -95,18 +97,17 @@ update msg model =
     SetCell c ->
       let
         nextGrid = setCursorCell c model
-        -- nextModel = { model | grid = nextGrid }
-        -- nextCursor = case (c, model.direction) of
-        --   (Empty, Across) -> left
-        --   (Empty, Down) -> up
-        --   (_, Across) -> right
-        --   _ -> down
+        nextModel = { model | grid = nextGrid }
+        nextCursor = case (c, model.direction) of
+          (Empty, Across) -> left
+          (Empty, Down) -> up
+          (_, Across) -> right
+          _ -> down
       in
-        -- update nextCursor nextModel
-        ({ model | grid = nextGrid }, Cmd.none)
+        update nextCursor nextModel
 
-    -- ChangeDirection ->
-    --   ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
+    ChangeDirection ->
+      ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
 
     SuggestionsMsg msg ->
       let
@@ -172,7 +173,7 @@ viewCell model position selected =
 keyCodeToChar : Keyboard.KeyCode -> Msg
 keyCodeToChar keyCode =
   case keyCode of
-    -- 32 -> ChangeDirection
+    32 -> ChangeDirection
     37 -> left
     38 -> up
     39 -> right
