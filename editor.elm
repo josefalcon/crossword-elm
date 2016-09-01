@@ -8,8 +8,8 @@ import Dict
 import List
 import Maybe
 import String
-import Array
-import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Answer, Direction(Across, Down))
+import Array exposing (Array)
+import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Direction(Across, Down))
 import Suggestions
 
 
@@ -22,24 +22,49 @@ main =
     }
 
 
+type alias Slat =
+  { direction : Direction
+  , locations : List Position
+  }
+
+
 type alias Model =
   { size : Dimensions
   , cursor : Position
   , direction : Direction
   , grid : Grid
   , suggestions : Suggestions.Model
+  , slats : Array Slat
+  , activeSlat : Maybe Slat
   }
+
+
+initSlats : Dimensions -> Array Slat
+initSlats dimensions =
+  let
+    across row = List.map (\col -> (row, col)) [0..dimensions.width]
+    down col = List.map (\row -> (row, col)) [0..dimensions.height]
+  in
+    Array.fromList
+      ( (List.map across [0..dimensions.height] |> List.map (Slat Across))
+        ++
+        (List.map down [0..dimensions.width] |> List.map (Slat Down))
+      )
 
 
 init : (Model, Cmd Msg)
 init =
   let
+    dimensions = { width = 9, height = 9}
+    slats = initSlats dimensions
     model =
-      { size = { width = 9, height = 9}
+      { size = dimensions
       , grid = Array.repeat 9 (Array.repeat 9 Empty)
       , cursor = (0, 0)
       , direction = Across
       , suggestions = (fst Suggestions.init)
+      , slats = slats
+      , activeSlat = Array.get 0 slats
       }
   in
     (model, Cmd.none)
@@ -78,6 +103,15 @@ down : Msg
 down = MoveCursor 1 0
 
 
+activeSlat : Position -> Direction -> Array Slat -> Maybe Slat
+activeSlat cursor direction slats =
+  let
+    containsCursor slat =
+      (slat.direction == direction) && (slat.locations |> List.any ((==) cursor))
+  in
+    Array.get 0 (Array.filter containsCursor slats)
+
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -91,8 +125,10 @@ update msg model =
         { width, height } = model.size
         nextRow = row + rowDelta |> min (width - 1) |> max 0
         nextCol = col + colDelta |> min (height - 1) |> max 0
+        nextCursor = (nextRow, nextCol)
+        nextActiveSlat = activeSlat nextCursor model.direction model.slats
       in
-        ({ model | cursor = (nextRow, nextCol) }, Cmd.none)
+        ({ model | cursor = nextCursor, activeSlat = nextActiveSlat }, Cmd.none)
 
     SetCell c ->
       let
@@ -107,7 +143,11 @@ update msg model =
         update nextCursor nextModel
 
     ChangeDirection ->
-      ({ model | direction = if (model.direction == Across) then Down else Across }, Cmd.none)
+      let
+        nextDirection = if (model.direction == Across) then Down else Across
+        nextActiveSlat = activeSlat model.cursor nextDirection model.slats
+      in
+        ({ model | direction = nextDirection, activeSlat = nextActiveSlat }, Cmd.none)
 
     SuggestionsMsg msg ->
       let
@@ -125,6 +165,9 @@ view : Model -> Html Msg
 view model =
   div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
     [ viewGrid model
+    {--
+    , text (toString model)
+    --}
     , div [ style [("flex-basis", "100%")] ]
         [ App.map (SuggestionsMsg) (Suggestions.view model.suggestions)
         ]
