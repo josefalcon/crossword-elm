@@ -3,7 +3,7 @@ module Suggestions exposing (Model, Msg(SetPattern), init, update, view)
 import Html exposing (..)
 import Html.Attributes exposing (href, target, value, type', checked)
 import Html.App as App
-import Html.Events exposing (..)
+import Html.Events exposing (onWithOptions, targetValue, onCheck, onClick)
 import Http
 import Task
 import String
@@ -111,6 +111,14 @@ decodeSuggestions =
 innerHtml : String -> Attribute Msg
 innerHtml =
   VirtualDom.property "innerHTML" << Json.Encode.string
+
+
+onInput : (String -> Msg) -> Attribute Msg
+onInput tagger =
+  onWithOptions
+    "input"
+    { stopPropagation = True, preventDefault = True }
+    (Json.Decode.map tagger targetValue)
 
 
 view : Model -> Html Msg

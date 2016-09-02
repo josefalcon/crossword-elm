@@ -1,6 +1,6 @@
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (style, tabindex)
 import Html.Events exposing (..)
 import Keyboard
 import Char
@@ -11,6 +11,7 @@ import String
 import Array exposing (Array)
 import Model exposing (setCell, getCell, Grid, Cell(Empty, Block, Value), Dimensions, Position, Direction(Across, Down))
 import Suggestions
+import Json.Decode
 
 
 main =
@@ -18,7 +19,7 @@ main =
     { init = init
     , view = view
     , update = update
-    , subscriptions = subscriptions
+    , subscriptions = (\s -> Sub.none)
     }
 
 
@@ -84,6 +85,7 @@ type Msg
   | SetCell Cell
   | ChangeDirection
   | SuggestionsMsg Suggestions.Msg
+  | UpdateActiveSlat
   | NoOp
 
 
@@ -103,13 +105,17 @@ down : Msg
 down = MoveCursor 1 0
 
 
-activeSlat : Position -> Direction -> Array Slat -> Maybe Slat
-activeSlat cursor direction slats =
+activeSlatPattern : Model -> Maybe String
+activeSlatPattern model =
   let
-    containsCursor slat =
-      (slat.direction == direction) && (slat.locations |> List.any ((==) cursor))
+    pattern cell = case cell of
+      Empty -> "."
+      Value c -> c |> String.fromChar |> String.toLower
+      _ -> ""
+    cell loc = getCell loc model.grid |> Maybe.withDefault Empty
+    slatToPattern slat = List.map (cell >> pattern) slat.locations |> String.join ""
   in
-    Array.get 0 (Array.filter containsCursor slats)
+    Maybe.map slatToPattern model.activeSlat
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -125,29 +131,25 @@ update msg model =
         { width, height } = model.size
         nextRow = row + rowDelta |> min (width - 1) |> max 0
         nextCol = col + colDelta |> min (height - 1) |> max 0
-        nextCursor = (nextRow, nextCol)
-        nextActiveSlat = activeSlat nextCursor model.direction model.slats
       in
-        ({ model | cursor = nextCursor, activeSlat = nextActiveSlat }, Cmd.none)
+        update UpdateActiveSlat { model | cursor = (nextRow, nextCol) }
 
     SetCell c ->
       let
         nextGrid = setCursorCell c model
-        nextModel = { model | grid = nextGrid }
         nextCursor = case (c, model.direction) of
           (Empty, Across) -> left
           (Empty, Down) -> up
           (_, Across) -> right
           _ -> down
       in
-        update nextCursor nextModel
+        update nextCursor { model | grid = nextGrid }
 
     ChangeDirection ->
       let
         nextDirection = if (model.direction == Across) then Down else Across
-        nextActiveSlat = activeSlat model.cursor nextDirection model.slats
       in
-        ({ model | direction = nextDirection, activeSlat = nextActiveSlat }, Cmd.none)
+        update UpdateActiveSlat { model | direction = nextDirection }
 
     SuggestionsMsg msg ->
       let
@@ -155,19 +157,35 @@ update msg model =
       in
         ({ model | suggestions = nextSuggesstions }, Cmd.map (SuggestionsMsg) cmd)
 
+    UpdateActiveSlat ->
+      let
+        containsCursor slat =
+          (slat.direction == model.direction) && (slat.locations |> List.any ((==) model.cursor))
+        nextActiveSlat = Array.get 0 (Array.filter containsCursor model.slats)
+        nextModel = { model | activeSlat = nextActiveSlat }
+      in
+        case (activeSlatPattern nextModel) of
+          Just pattern -> update (SuggestionsMsg (Suggestions.SetPattern pattern)) nextModel
+          _ -> (nextModel, Cmd.none)
+
     _ -> (model, Cmd.none)
 
 
 -- view
 
 
+onKeyUp : (Int -> Msg) -> Attribute Msg
+onKeyUp tagger =
+  onWithOptions
+    "keydown"
+    { stopPropagation = True, preventDefault = True }
+    (Json.Decode.map tagger keyCode)
+
+
 view : Model -> Html Msg
 view model =
   div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
     [ viewGrid model
-    {--
-    , text (toString model)
-    --}
     , div [ style [("flex-basis", "100%")] ]
         [ App.map (SuggestionsMsg) (Suggestions.view model.suggestions)
         ]
@@ -176,7 +194,7 @@ view model =
 
 viewGrid : Model -> Html Msg
 viewGrid model =
-  div [ style [ ("flex-basis", "100%") ] ]
+  div [ onKeyUp keyCodeToChar, tabindex 0, style [ ("flex-basis", "100%"), ("outline", "none") ] ]
     [ table [ style [ ("border-collapse", "collapse") ] ]
       [ tbody [] (List.map (viewRow model) [0..(model.size.height - 1)]) ]
     ]
@@ -226,11 +244,6 @@ keyCodeToChar keyCode =
     _ -> if (keyCode >= 65 && keyCode <= 90)
          then keyCode |> Char.fromCode |> Value |> SetCell
          else NoOp
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-  Keyboard.downs keyCodeToChar
 
 
 -- css
