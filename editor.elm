@@ -23,49 +23,27 @@ main =
     }
 
 
-type alias Slat =
-  { direction : Direction
-  , locations : List Position
-  }
-
-
 type alias Model =
   { size : Dimensions
   , cursor : Position
   , direction : Direction
   , grid : Grid
   , suggestions : Suggestions.Model
-  , slats : Array Slat
-  , activeSlat : Maybe Slat
+  , activeCells : List Position
   }
-
-
-initSlats : Dimensions -> Array Slat
-initSlats dimensions =
-  let
-    across row = List.map (\col -> (row, col)) [0..dimensions.width]
-    down col = List.map (\row -> (row, col)) [0..dimensions.height]
-  in
-    Array.fromList
-      ( (List.map across [0..dimensions.height] |> List.map (Slat Across))
-        ++
-        (List.map down [0..dimensions.width] |> List.map (Slat Down))
-      )
 
 
 init : (Model, Cmd Msg)
 init =
   let
     dimensions = { width = 9, height = 9}
-    slats = initSlats dimensions
     model =
       { size = dimensions
       , grid = Array.repeat 9 (Array.repeat 9 Empty)
       , cursor = (0, 0)
       , direction = Across
       , suggestions = (fst Suggestions.init)
-      , slats = slats
-      , activeSlat = Array.get 0 slats
+      , activeCells = List.map ((,) 0) [0..8]
       }
   in
     (model, Cmd.none)
@@ -85,7 +63,7 @@ type Msg
   | SetCell Cell
   | ChangeDirection
   | SuggestionsMsg Suggestions.Msg
-  | UpdateActiveSlat
+  | UpdateActiveCells
   | NoOp
 
 
@@ -105,17 +83,38 @@ down : Msg
 down = MoveCursor 1 0
 
 
-activeSlatPattern : Model -> Maybe String
-activeSlatPattern model =
+activeCells : Model -> List Position
+activeCells model =
+  let
+    left (row, col) = (row, col - 1)
+    right (row, col) = (row, col + 1)
+    up (row, col) = (row - 1, col)
+    down (row, col) = (row + 1, col)
+
+    takeEmpty next pos accum =
+      case (getCell pos model.grid) of
+        Just Block -> accum
+        Nothing -> accum
+        _ -> takeEmpty next (next pos) (pos :: accum)
+  in
+    case model.direction of
+      Across ->
+        (takeEmpty left model.cursor []) ++ (takeEmpty right (right model.cursor) []) |> List.sortBy snd
+
+      Down ->
+        (takeEmpty up model.cursor []) ++ (takeEmpty down (down model.cursor) []) |> List.sortBy fst
+
+
+activeCellsPattern : Model -> String
+activeCellsPattern model =
   let
     pattern cell = case cell of
       Empty -> "."
       Value c -> c |> String.fromChar |> String.toLower
       _ -> ""
     cell loc = getCell loc model.grid |> Maybe.withDefault Empty
-    slatToPattern slat = List.map (cell >> pattern) slat.locations |> String.join ""
   in
-    Maybe.map slatToPattern model.activeSlat
+    List.map (cell >> pattern) model.activeCells |> String.join ""
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -132,7 +131,7 @@ update msg model =
         nextRow = row + rowDelta |> min (width - 1) |> max 0
         nextCol = col + colDelta |> min (height - 1) |> max 0
       in
-        update UpdateActiveSlat { model | cursor = (nextRow, nextCol) }
+        update UpdateActiveCells { model | cursor = (nextRow, nextCol) }
 
     SetCell c ->
       let
@@ -149,7 +148,7 @@ update msg model =
       let
         nextDirection = if (model.direction == Across) then Down else Across
       in
-        update UpdateActiveSlat { model | direction = nextDirection }
+        update UpdateActiveCells { model | direction = nextDirection }
 
     SuggestionsMsg msg ->
       let
@@ -157,16 +156,12 @@ update msg model =
       in
         ({ model | suggestions = nextSuggesstions }, Cmd.map (SuggestionsMsg) cmd)
 
-    UpdateActiveSlat ->
+    UpdateActiveCells ->
       let
-        containsCursor slat =
-          (slat.direction == model.direction) && (slat.locations |> List.any ((==) model.cursor))
-        nextActiveSlat = Array.get 0 (Array.filter containsCursor model.slats)
-        nextModel = { model | activeSlat = nextActiveSlat }
+        nextModel = { model | activeCells = activeCells model }
+        pattern = activeCellsPattern nextModel
       in
-        case (activeSlatPattern nextModel) of
-          Just pattern -> update (SuggestionsMsg (Suggestions.SetPattern pattern)) nextModel
-          _ -> (nextModel, Cmd.none)
+        update (SuggestionsMsg (Suggestions.SetPattern pattern)) nextModel
 
     _ -> (model, Cmd.none)
 
@@ -186,6 +181,9 @@ view : Model -> Html Msg
 view model =
   div [ style [ ("padding", "1rem"), ("display", "flex") ] ]
     [ viewGrid model
+    {--}
+    , text (toString (activeCells model))
+    --}
     , div [ style [("flex-basis", "100%")] ]
         [ App.map (SuggestionsMsg) (Suggestions.view model.suggestions)
         ]
@@ -203,17 +201,20 @@ viewGrid model =
 viewRow : Model -> Int -> Html Msg
 viewRow model row =
   let
+    activeCell col = List.any ((==) (row, col)) model.activeCells
     cell col = case (getCell (row, col) model.grid) of
-      Just c -> viewCell c (row, col) ((row, col) == model.cursor)
+      Just c -> viewCell c (row, col) ((row, col) == model.cursor) (activeCell col)
       Nothing -> td [] []
   in
     tr [] (List.map cell [0..(model.size.width - 1)])
 
 
-viewCell : Cell -> Position -> Bool -> Html Msg
-viewCell model position selected =
+viewCell : Cell -> Position -> Bool -> Bool -> Html Msg
+viewCell model position selected active =
   let
-    background = if selected then (backgroundColor yellow) else []
+    background = if selected then (backgroundColor yellow)
+      else if active then (backgroundColor blue)
+      else []
 
     clicker = onClick (SetCursor position)
   in
